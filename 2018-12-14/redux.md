@@ -48,9 +48,9 @@ function compose(){
 }
 ```
 
-    基于上面的applyMiddleware，编写中间件。上面已经提到 中间件的作用是改造dispatch。在业务逻辑中，像往常一样调用dispatch，但首先会通过中间件，最后达到原生的dispatch。
-    applyMiddleware.js中，最精华的一行代码：
-    
+基于上面的applyMiddleware，编写中间件。上面已经提到 中间件的作用是改造dispatch。在业务逻辑中，像往常一样调用dispatch，但首先会通过中间件，最后达到原生的dispatch。
+applyMiddleware.js中，最精华的一行代码：
+
 ```
 dispatch = compose(...chain)(store.dispatch)
 	其实，完整的可直观的调用为 compose( f, g, h )(store.dispatch)(action),实际执行为f( g( h(store.dispatch) ) )(action)。其中，f，g，h为调用中间件返回的函数：
@@ -59,8 +59,8 @@ dispatch = compose(...chain)(store.dispatch)
 	return next( action )
 }
 ```
-	令人惊叹的设计！但我必须说这真的是回调地狱的典范…
-	我们用异步来展现改造后的dispatch的执行流程的话，如下：
+令人惊叹的设计！但我必须说这真的是回调地狱的典范…
+我们用异步来展现改造后的dispatch的执行流程的话，如下：
 ```
 dispatch = (action) => {
 f(action).then( (action)=>{ g(action) } )
