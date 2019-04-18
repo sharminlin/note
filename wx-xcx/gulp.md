@@ -9,7 +9,7 @@
 
 ### gulp.js
 
-```
+``` JS
 const gulp = require('gulp')
 const rename = require('gulp-rename')
 const del = require('del')
@@ -135,7 +135,7 @@ function sass () {
 
 ### ./src/config.js
 
-```
+``` JS
 module.exports = {
   dev: {
     HOST: '',
@@ -155,7 +155,7 @@ module.exports = {
 
 ### package.json
 
-```
+``` JS
 {
   "name": "",
   "version": "1.2.0",
