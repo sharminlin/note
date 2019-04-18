@@ -22,6 +22,7 @@
     compose(f,g,h)(…args)等同于f( g( h(…args) ) )
     这是未知个中间件组合的核心实现，核心在reduceRight()函数，该函数从右侧执行，并将其返回的值传给下一个。精妙在其第二个参数，为自执行表达式
     源码为ES6的实现，ES5的实现如下：
+    
 ```
 function compose(){
  	var fnArgs = Array.prototype.slice.call( arguments );
@@ -53,18 +54,20 @@ applyMiddleware.js中，最精华的一行代码：
 
 ```
 dispatch = compose(...chain)(store.dispatch)
-	其实，完整的可直观的调用为 compose( f, g, h )(store.dispatch)(action),实际执行为f( g( h(store.dispatch) ) )(action)。其中，f，g，h为调用中间件返回的函数：
-	next=>action=>{
-	// do something…
-	return next( action )
+  其实，完整的可直观的调用为 compose( f, g, h )(store.dispatch)(action),实际执行为f( g( h(store.dispatch) ) )(action)。其中，f，g，h为调用中间件返回的函数：
+  next=>action=>{
+  // do something…
+  return next( action )
 }
 ```
+
 令人惊叹的设计！但我必须说这真的是回调地狱的典范…
 我们用异步来展现改造后的dispatch的执行流程的话，如下：
+
 ```
 dispatch = (action) => {
 f(action).then( (action)=>{ g(action) } )
-    .then( (action)=>{ h(action) } )
-    .then( (action)=>{ store.dispatch(action) } )
+  .then( (action)=>{ h(action) } )
+  .then( (action)=>{ store.dispatch(action) } )
 }
 ```
