@@ -2,6 +2,24 @@
 
 ## 组件
 
+### button
+
+#### 1. 样式覆盖
+当button需要自定义ui时，需要覆盖原生样式
+
+``` css
+.btn {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  font-size: 30rpx;
+  background-color: #fff;
+}
+.btn::after {
+  border: 0;
+}
+```
+
 ### input
 
 #### 1. height高度
