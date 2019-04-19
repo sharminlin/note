@@ -11,19 +11,19 @@
     因此，每一个action其实是去响应了所有的reducer，
     因此，type值必须在整个项目中时唯一的。
 5. reducer = ( previousState, action ) => newState
-    combineReducers = () => reducer
+    `combineReducers = () => reducer`
     单一的reducer没什么可以讲的，combineReducers的作用是将无数个reducer分离，避免过于臃肿难以维护。
     其中原理并不复杂，仅仅是将每个reducer作了分离，同时根据combineReducers传入的key值，将state树作相应枝干。
 6. applyMiddleware  =  (…middleware) => {…store, dispatch}
-    createStore其preloadedState与enhancer是可有的，根据规则，reducer和enhancer为函数，preloadedState为对象。因此在redux—createStore.js中，当第二个实参为函数，同时第三个参数undefined时，会调用：
+    createStore其preloadedState与enhancer是可有的，根据规则，reducer和enhancer为函数，preloadedState为对象。因此在**redux—createStore.js**中，当第二个实参为函数，同时第三个参数undefined时，会调用：
 7. enhancer( createStore )( reducer, preloadedState )
-    enhancer即 中间件。enhancer( createStore ) 返回一个带有中间件的createSore函数。换句话说，即将原来的createStore进行改造。
+    enhancer即 中间件。`enhancer( createStore )` 返回一个带有中间件的createSore函数。换句话说，即将原来的createStore进行改造。
     其中，有一个compose函数值得注意，功能表现为：
     compose(f,g,h)(…args)等同于f( g( h(…args) ) )
     这是未知个中间件组合的核心实现，核心在reduceRight()函数，该函数从右侧执行，并将其返回的值传给下一个。精妙在其第二个参数，为自执行表达式
     源码为ES6的实现，ES5的实现如下：
     
-```
+```js
 function compose(){
  	var fnArgs = Array.prototype.slice.call( arguments );
  
@@ -50,9 +50,9 @@ function compose(){
 ```
 
 基于上面的applyMiddleware，编写中间件。上面已经提到 中间件的作用是改造dispatch。在业务逻辑中，像往常一样调用dispatch，但首先会通过中间件，最后达到原生的dispatch。
-applyMiddleware.js中，最精华的一行代码：
+**applyMiddleware.js中**，最精华的一行代码：
 
-```
+``` js
 dispatch = compose(...chain)(store.dispatch)
   其实，完整的可直观的调用为 compose( f, g, h )(store.dispatch)(action),实际执行为f( g( h(store.dispatch) ) )(action)。其中，f，g，h为调用中间件返回的函数：
   next=>action=>{
@@ -64,7 +64,7 @@ dispatch = compose(...chain)(store.dispatch)
 令人惊叹的设计！但我必须说这真的是回调地狱的典范…
 我们用异步来展现改造后的dispatch的执行流程的话，如下：
 
-```
+``` js
 dispatch = (action) => {
 f(action).then( (action)=>{ g(action) } )
   .then( (action)=>{ h(action) } )
