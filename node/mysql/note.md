@@ -19,5 +19,65 @@ emmmm，总结性比较强，划重点，大多引用。许多过于基础的都
 > 2. 全局唯一GUID类型：使用一种全局唯一的字符串作为主键，类似8f55d96b-8acc-4636-8cb8-76bf8abc2f57。GUID算法通过网卡MAC地址、时间戳和随机数保证任意计算机在任意时间生成的字符串都是不同的，大部分编程语言都内置了GUID算法，可以自己预算出主键
 
 ## 外键
-一个表中的一个外键指向另一个表中的主键
+一个表中的一个外键指向另一个表中的主键，表明表与表之间的对应关系
 
+## 索引
+> 索引是关系数据库中对某一列或多个列的值进行预排序的数据结构。通过使用索引，可以让数据库系统不必扫描整个表，而是直接定位到符合条件的记录，这样就大大加快了查询速度。
+
+### 唯一索引
+表示表中某一列的值是唯一的
+
+## 查询语句
+
+### 基本查询
+``` SQL
+SELECT * FROM TAB_NAME
+```
+
+### 条件查询
+``` SQL
+SELECT * FROM TAB_NAME WHERE <条件语句>
+```
+
+常用逻辑运算符 OR AND NOT BETWWEN IN LIKE，更详细的解释请参考[SQL逻辑运算符](https://www.yiibai.com/sql/sql-logical-operators.html)
+
+常用的表达式符号
+``` JS
+{
+  '=': '等于', 
+  '>': '大于', 
+  '>=': '大于或等于', 
+  '<': '小于', 
+  '<=': '小于或等于', 
+  '<>': '不等于'
+}
+```
+
+### 排序 ORDER BY
+``` SQL
+SELECT field_1 field_2 field_3 FROM TAB_NAME ORDER BY field_1 DESC, field_2
+```
+表示： 先根据```field_1```倒序，同```field_1```的数据按照```field_2```排序
+
+### 分页查询 LIMIT OFFSET
+假设每页需要pageSize条，当前页数为pageIndex
+``` SQL
+SELECT field_1 field_2 field_3 FROM TAB_NAME 
+ORDER BY field_1 DESC, field_2 
+LIMIT pageSize OFFSET ((pageindex - 1) * pageSize)
+```
+
+
+### 聚合查询
+
+函数 | 说明
+:-: | :-:
+COUNT() | 查询所有列的行数
+SUM() | 计算某一列的合计值，该列必须为数值类型
+AVG() | 计算某一列的平均值，该列必须为数值类型
+MAX() | 计算某一列的最大值
+MIN() | 计算某一列的最小值
+
+
+#### 分组聚合 GROUP BY
+顾名思义，根据某个或某多个字段进行分组后再聚合
