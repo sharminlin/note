@@ -44,6 +44,10 @@ min-height: 0
 实际操作中发现，当input框设置为`display: none`或者 `width: 0; height: 0; min-height: 0`时，在手机端无法响应。
 解决方案：宽高为0时给input框设置`height: 1rpx` 或者 定位移至屏幕外
 
+### textarea
+#### placeholder显示在遮罩层之上
+这个属于微信原生bug，解决方案是当显示遮罩时，将textarea隐藏，关闭时显示。暂时还没有更好的解决方案。
+
 ### image
 
 #### 1. display: inline-block

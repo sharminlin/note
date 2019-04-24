@@ -4,7 +4,7 @@
 参考[使用 PM2 管理nodejs进程](https://www.cnblogs.com/liusixin/p/7007340.html "node管理")
 pm2 是一个带有负载均衡功能的Node应用的进程管理器.
 当你要把你的独立代码利用全部的服务器上的所有CPU，并保证进程永远都活着，0秒的重载， PM2是完美的。
-它非常适合IaaS结构，但不要把它用于PaaS方案（随后将开发Paas的解决方案）
+它非常适合IaaS结构，但不要把它用于PaaS方案
 
 ### 安装
 
@@ -19,7 +19,7 @@ pm2 start app.js --name app
 ```
 pm2 list               # 显示所有进程状态
 pm2 monit              # 监视所有进程
-pm2 logs               #  显示所有进程日志
+pm2 logs               # 显示所有进程日志
 pm2 stop all           # 停止所有进程
 pm2 restart all        # 重启所有进程
 pm2 reload all         # 0秒停机重载进程 (用于 NETWORKED 进程)
