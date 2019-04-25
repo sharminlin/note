@@ -41,7 +41,7 @@ min-height: 0
 <input class="code-input-hide" password value="{{value}}" maxlength="{{maxLength}}" focus="{{isFocus}}" bindinput="handleInput" bindblur="handleBlur" />
 ```
 
-实际操作中发现，当input框设置为`display: none`或者 `width: 0; height: 0; min-height: 0`时，在手机端无法响应。
+实际操作中发现，当input框设置为`display: none`或者 `width: 0; height: 0; min-height: 0`时，在手机端无法响应。<br />
 解决方案：宽高为0时给input框设置`height: 1rpx` 或者 定位移至屏幕外
 
 ### textarea
@@ -51,7 +51,7 @@ min-height: 0
 ### image
 
 #### 1. display: inline-block
-当图片设置为行内模块时，与行内文字未对齐。
+当图片设置为行内模块时，与行内文字未对齐。<br />
 使用`vertical-align: top`，使其与文字顶线对齐即可
 
 ## 样式
