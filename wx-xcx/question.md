@@ -62,3 +62,7 @@ wxss中无法设置路径图片，必须写入base64格式。可以写在行内�
 ## API
 ### wx.switchTab
 该API在跳转时，无法携带参数。因此必须避免tabBar页面需要参数。
+
+### 提示 wx.showToast、wx.showModal、wx.showLoading
+由于多数时候，在后台请求出错时，会使用showToast来提示，但是后台传过来的msg为`null`，导致控制台报错，小程序直接死掉。<br />
+一看官方文档，这三个API的title为必填值，实在非常之坑。使用时一定要注意。
