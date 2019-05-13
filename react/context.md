@@ -1,4 +1,5 @@
 # context in react
+如果你对旧api不感兴趣，可以直接跳到<a href="#16.x">16.x版本的笔记</a>
 
 ## 概念 Concept
 众所周知这是一个dangerous features，非常容易引起组件树间的共享混乱，因此尽量少的去使用它。<br />
@@ -33,6 +34,7 @@ static contextTypes = {
 ## 如何改变context某个属性值 How to change
 将某个属性(假定为`uname`)指向state，改变state即可响应子孙组件中使用的context.uname
 
+<a name="16.x"></a>
 # context in 16.x
 在16.x版本以上，facebook对context进行了一个极大的修改，以使其更好的贴近react哲学。当然旧的API也将被兼容，但官方建议最好迁移至新的api。<br />
 先看一下官方的例子
