@@ -32,7 +32,7 @@ min-height: 0
 #### 2. focus属性自动聚焦失效
 实现一个类似序列号的输入框，思路：将实际的input隐藏，将绑定值按UI分割显示。则用户点击序列号展示框时，设input的focus属性为true，期望自动拉起键盘。
 
-```
+``` html
 <view class="invit-code-box" catch:tap="handleTapInput">
   <block wx:for="{{maxLength}}" wx:key="index">
     <view class="code-input">{{code.length >= index + 1 ? code[index] : ''}}</view>
