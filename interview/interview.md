@@ -1,5 +1,54 @@
 # 总结
 
+## 原型&原型链
+JS中，每一个函数对象都具有一个名为`prototype`的原型对象。而`prototype`中具有一个内置属性`_proto_`指向创建该函数对象的函数对象的原型（好吧，确实绕= =）。由此形成原型链。
+
+### 构造函数
+我们通过构造函数来演示原型链的指向关系
+```JS
+function Person (name) {
+  this.name = name
+}
+Person.prototype.say = function () {
+  console.log('say' + this.name)
+}
+
+var person = new Person('Joe')
+```
+这其中，Joe这个person就是构造函数Person的实例。原型链的关系如下
+
+```JS
+// 实例person内置constructor属性指向构造函数Person
+// Person的原型对象内置constructor属性也指向构造函数Person
+person.constructor === Person === Person.prototype.constructor
+
+// 实例person内置__proto__属性指向构造函数Person的原型对象
+person.__proto__ === Person.prototype
+
+// Person的内置__proto__属性指向构造函数Functin的原型对象
+// 函数对象的__proto__都指向Function.prototype
+Person.__proto__ === Function.prototype // Function.prototype为空函数对象
+Function.__proto__ === Function.prototype
+Object.__proto__ === Function.prototype
+
+// 函数对象的原型对象的__proto__指向Object的原型
+Person.prototype.__proto__ === Object.prototype
+Function.prototype.__proto__ === Object.prototype
+
+// 特殊
+Object.prototype.__proto__ === null
+```
+
+## new
+new一个构造函数时，发生了什么
+1. 创建一个空对象`var obj = new Object()`
+2. 给obj创建内置对象constructor指向构造函数，创建__prototype__指向构造函数的原型对象
+3. 改变this指向obj，`a.call(obj)`
+4. 给实例obj分配内存地址
+
+## call apply bind
+
+
 ### 内存泄露
 
 #### The reason
