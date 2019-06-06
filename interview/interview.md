@@ -151,9 +151,10 @@ fn.call(context, arg1, arg2, arg3)
 ### 函数式编程
 函数式编程的一个特点就是，允许把函数本身作为参数传入另一个函数，还允许返回一个函数！
 
-#算法
+# 算法
 
 ## 合并两个数组
+
 ### 1. concat
 ```JS
 let newArr = arrA.concat(arrB) // 返回一个新数组
