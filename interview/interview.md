@@ -1,7 +1,88 @@
 # 总结
 
+# CSS
+## position
+### 值
+1. static（默认）
+2. relative（相对定位）
+3. absolute（绝对定位）
+4. fixed（固定定位）
+5. inherit（继承父元素的定位）
+
+## BFC
+BFC（Block Fromatting Context），即块级格式化上下文<br />
+要形成一个BFC元素，需要满足以下几个条件之一<br />
+1. 浮动元素
+2. 绝对定位元素
+3. display的值是inline-block、table-cell、flex、table-caption或者inline-flex
+4. overflow的值不等于visible
+
+### 用处
+1. 清除浮动
+```html
+<div class="wrap">
+  <section>1</section>
+  <section>2</section>
+</div>
+```
+
+```css
+.wrap {
+  border: 2px solid yellow;
+  width: 250px;
+  overflow: hidden;
+}
+section {
+  background-color: pink;
+  float: left;
+  width: 100px;
+  height: 100px;
+}
+```
+2. 自适应两栏布局
+```html
+<div>
+  <aside></aside>
+  <main>我是好多好多文字会换行的那种蛤蛤蛤蛤蛤蛤蛤蛤蛤蛤蛤蛤蛤</main>
+</div>
+```
+
+```css
+div {width: 200px;}
+aside {
+  background-color: yellow;
+  float: left;
+  width: 100px;
+  height: 50px;
+}
+main {
+  background-color: pink;
+  overflow: hidden;
+}
+```
+
+3. 防止margin合并
+```html
+<p class="top">1</p>
+<div class="wrap">
+  <p class="bottom">2</p>
+</div>
+```
+
+```css
+p {
+  margin: 10px 0;
+}
+
+/* 第二个块形成BFC */
+.wrap {
+  overflow: hidden
+}
+```
+
+# JS
 ## 原型&原型链
-JS中，每一个函数对象都具有一个名为`prototype`的原型对象。而`prototype`中具有一个内置属性`_proto_`指向创建该函数对象的函数对象的原型（好吧，确实绕= =）。由此形成原型链。
+JS中，每一个函数对象都具有一个名为`prototype`的原型对象。而每一个对象都具有一个内置属性`_proto_`指向创建该对象的函数对象的原型（好吧，确实绕= =）。由此形成原型链。
 
 ### 构造函数
 我们通过构造函数来演示原型链的指向关系
@@ -42,12 +123,17 @@ Object.prototype.__proto__ === null
 ## new
 new一个构造函数时，发生了什么
 1. 创建一个空对象`var obj = new Object()`
-2. 给obj创建内置对象constructor指向构造函数，创建__prototype__指向构造函数的原型对象
+2. 给obj创建内置对象constructor指向构造函数，创建__proto__指向构造函数的原型对象
 3. 改变this指向obj，`a.call(obj)`
 4. 给实例obj分配内存地址
 
 ## call apply bind
-
+这三者其实都是改变函数执行的上下文，区别是call、apply会立即执行目标函数，而bind是类似声明改变函数运行时的上下文。<br />
+当然，apply和call的入参不一样
+```JS
+fn.apply(context, [arg1, arg2, arg3])
+fn.call(context, arg1, arg2, arg3)
+```
 
 ### 内存泄露
 
