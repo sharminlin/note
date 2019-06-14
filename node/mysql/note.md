@@ -80,4 +80,16 @@ MIN() | 计算某一列的最小值
 
 
 #### 分组聚合 GROUP BY
-顾名思义，根据某个或某多个字段进行分组后再聚合
+顾名思义，根据某个或某多个字段进行分组后再聚合，用于根据某个字段或多个字段去重
+```SQL
+SELECT * from TAB_NAME WHERE field_1 = 20 GROUP BY field_2
+```
+
+根据某个字段去重得到数量统计
+```SQL
+-- 1
+SELECT COUNT(1) (SELECT * from TAB_NAME WHERE field_1 = 20 GROUP BY field_2) a
+
+-- 2
+SELECT COUNT(DISTINCT field_2) from TAB_NAME WHERE field_1 = 20
+```
