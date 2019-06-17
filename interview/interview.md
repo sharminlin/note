@@ -43,7 +43,7 @@ section {
 ```html
 <div>
   <aside></aside>
-  <main>我是好多好多文字会换行的那种蛤蛤蛤蛤蛤蛤蛤蛤蛤蛤蛤蛤蛤</main>
+  <main>我是好多好多文字会换行的那种呵呵呵呵呵呵呵呵呵呵呵呵呵</main>
 </div>
 ```
 
