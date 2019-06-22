@@ -48,6 +48,10 @@ min-height: 0
 #### placeholder显示在遮罩层之上
 这个属于微信原生bug，解决方案是当显示遮罩时，将textarea隐藏，关闭时显示。暂时还没有更好的解决方案。
 
+#### 在一个fixed弹窗层中，按住textarea滑动会使得其中文字随页面同时滑动
+按照官网的解释，需要在textarea中添加fixed属性。<br />
+**但是如果弹窗中包含滚动区域，会出现另一种不预知的情况：textarea中的文字固定在页面上，无法滚动**。在经过各种办法之后依然无法解决这种场景下的BUG，无奈只好使用view+input做一个伪装的textarea输入效果。
+
 ### image
 
 #### 1. display: inline-block
