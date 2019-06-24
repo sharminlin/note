@@ -120,6 +120,21 @@ Function.prototype.__proto__ === Object.prototype
 Object.prototype.__proto__ === null
 ```
 
+## 常用技巧
+
+
+### 1 双位运算符
+```JS
+~~2.1 // 2
+~~-2.1 | // ---2
+```
+
+### 2 取整
+```JS
+2.1 | 0 // 2
+-2.1 | 0 // -2
+```
+
 ## new
 new一个构造函数时，发生了什么
 1. 创建一个空对象`var obj = new Object()`
