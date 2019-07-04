@@ -74,3 +74,47 @@ wxss中无法设置路径图片，必须写入base64格式。可以写在行内�
 ### onShareAppMessage页面分享回调
 业务需要在分享时，生成一个动态的图片。该动态图片预使用canvas画图，生成imgPath。<br />
 预期在分享时生成，因此引入了async/await特性，然而该`onShareAppMessage`回调为同步执行，在await时，该函数并没有阻塞分享的交互。大坑- -
+
+### wx.downloadFile下载文件
+调用该api会返回一个临时文件路径，之后再调用wx.saveFile可以保存至本地沙盒目录。但是此时在手机上寻找该文件简直是一件几乎不可能的事情。因此考虑使用wx.openDocument打开预览文件，此时用户可发送文件。<br />
+
+到此为止一切都很顺利，唯一的不友好的地方在于downloadFile获取到的文件名为压缩过的乱码。在一系列寻找问题之后，找到微信操作文件对象`FileSystemManager`，使用其函数renameSync可以更改文件名。<br />
+
+第一次尝试：`wx.downloadFile` -> `wx.saveFile` -> `rename` -> `wx.openDocument`。结果直接报错，无权限更改文件。再次努力寻找解决方法后，终于得见曙光，以下是代码实现
+```JS
+wx.downloadFile({
+  url: '', // 服务器文件路径
+  success (res) {
+    wx.hideLoading()
+    if (res.statusCode === 200) {
+      let catalog = wx.env.USER_DATA_PATH // 微信文件缓存目录
+
+      // 源文件名
+      let originalFile = truncationFile(that.data.actualDetail.offerUrl) // truncationFile该方法分割文件目录和文件名，文件名带斜杠，此处不贴上了
+      let newPath = catalog + originalFile.fileName
+
+      // 重名名
+      let FileSystemManager = wx.getFileSystemManager()
+      FileSystemManager.renameSync(res.tempFilePath, newPath)
+
+      // 预览
+      wx.openDocument({
+        filePath: newPath,
+        success: function(res) {
+          console.log('打开文档成功')
+        },
+        fail: function(res) {
+          console.log(res);
+        },
+        complete: function(res) {
+          console.log(res);
+        }
+      })
+    }
+  },
+  fail: function () {
+    wx.hideLoading()
+    wx.showToast({ icon: 'none', title: '下载失败' })
+  }
+})
+```
