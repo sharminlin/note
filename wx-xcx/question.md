@@ -118,3 +118,7 @@ wx.downloadFile({
   }
 })
 ```
+
+### wx.requestPayment 调用支付
+前台发起订单，后台调用微信api生成支付信息，返回支付参数，前端再使用`wx.requestPayment`发起支付。<br />
+需要注意的是该api的所有非function入参都是string，另外其中`package`的值为`统一下单接口返回的 prepay_id 参数值，提交格式如：prepay_id=***`。不正确会报error: total_fee is invalide。好吧，这是没认真看文档的错~~
