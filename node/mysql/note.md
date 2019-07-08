@@ -1,7 +1,7 @@
 # SQL 学习记录
 
 ## 前言
-sql学习记录，参考[廖雪峰SQL教程](https://www.liaoxuefeng.com/wiki/001508284671805d39d23243d884b8b99f440bfae87b0f4000 "SQL教程")
+sql学习记录，参考[廖雪峰SQL教程](https://www.liaoxuefeng.com/wiki/001508284671805d39d23243d884b8b99f440bfae87b0f4000 "SQL教程")<br />
 emmmm，总结性比较强，划重点，大多引用。许多过于基础的都会略过
 
 ## 主键
