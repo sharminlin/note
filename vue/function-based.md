@@ -41,7 +41,7 @@ const App = {
 ```
 
 直接看例子，初看能看出几点<br />
-1. 从上往下，我们发现从`vue`这个包里引入了好几个东西`value, computed, watch, onMounted`，先放着待会儿就知道（看命名多半也知道个大概，哈哈）
+1. 从上往下，我们发现从`vue`这个包里引入了好几个东西`value, computed, watch, onMounted`，先放着待会儿就知道（看命名多半也知道个大概惹）
 2. 整个组件声明没变化，也是一个对象。但里面就不一样了，多了个`setup`函数，这个函数我有所耳闻，核心更改都在这里面了。然后以前的data、methods、computed、watch等等都没了。没错，都集成到了setup里面。
 
 ## setup()
@@ -49,6 +49,7 @@ const App = {
 
 ## value()
 替代data()，从例子中可以看出，传入的值就是初始值了（真像useState），返回了一个对象。没错，就是对象，该对象仅有一个值：value（即使用时是count.value）。该对象被称为**value wrapper （包装对象）**。如果想声明一个没有包装对象的`响应式对象`（通常在使用了value()后，我不建议这样做，因为这会使你的项目变得混乱），你可以使用`state`函数。
+
 ``` JS
 import { state } from 'vue'
 
@@ -78,7 +79,7 @@ const MyComponent = {
       }, count.value)
     )
   }
-} 
+}
 ```
 可以使用渲染函数，当然也可以使用render函数。但并不建议这样搭配使用，这样会造成不必要的解构操作。
 
