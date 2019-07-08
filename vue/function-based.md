@@ -48,8 +48,7 @@ const App = {
 新的组件选项，setup，用于设置组件的logic。在组件实例被创建，初始化了props后调用（所以props没有集成进来哦~，props作为setup的参数传入，setup(props)）。他可以返回在里面定义的任何值，并且是响应式的。没错，他替代了data()，但又不止data()，除此之外的methods、computed、watch，甚至是生命周期都在里面被声明定义。
 
 ## value()
-替代data()，从例子中可以看出，传入的值就是初始值了（真像useState），返回了一个对象。没错，就是对象，该对象仅有一个值：value（即使用时是count.value）。该对象被称为**value wrapper （包装对象）**。 <b>
-如果想声明一个没有包装对象的`响应式对象`（通常在使用了value()后，我不建议这样做，因为这会使你的项目变得混乱），你可以使用`state`函数
+替代data()，从例子中可以看出，传入的值就是初始值了（真像useState），返回了一个对象。没错，就是对象，该对象仅有一个值：value（即使用时是count.value）。该对象被称为**value wrapper （包装对象）**。如果想声明一个没有包装对象的`响应式对象`（通常在使用了value()后，我不建议这样做，因为这会使你的项目变得混乱），你可以使用`state`函数。
 ``` JS
 import { state } from 'vue'
 
