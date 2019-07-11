@@ -50,5 +50,5 @@ function getLength(something: string | number): number {
 }
 ```
 
-如上，`something`是一个联合类型的参数，声明函数时是无法知晓调用时的入参是哪种类型（`string` or `number`）。因此在该函数体内，`something`只能访问string和number的共同属性和方法。
+如上，`something`是一个联合类型的参数，声明函数时是无法知晓调用时的入参是哪种类型（`string` or `number`）。因此在该函数体内，`something`只能访问string和number的共同属性和方法。而number没有`length`属性，编译时会报错。
 
