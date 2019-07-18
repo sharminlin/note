@@ -122,7 +122,6 @@ Object.prototype.__proto__ === null
 
 ## 常用技巧
 
-
 ### 1 双位运算符
 ```JS
 ~~2.1 // 2
@@ -135,19 +134,55 @@ Object.prototype.__proto__ === null
 -2.1 | 0 // -2
 ```
 
-## new
+### new
 new一个构造函数时，发生了什么
 1. 创建一个空对象`var obj = new Object()`
 2. 给obj创建内置对象constructor指向构造函数，创建__proto__指向构造函数的原型对象
 3. 改变this指向obj，`a.call(obj)`
 4. 给实例obj分配内存地址
 
-## call apply bind
+### call apply bind
 这三者其实都是改变函数执行的上下文，区别是call、apply会立即执行目标函数，而bind是类似声明改变函数运行时的上下文。<br />
 当然，apply和call的入参不一样
 ```JS
 fn.apply(context, [arg1, arg2, arg3])
 fn.call(context, arg1, arg2, arg3)
+```
+
+#### apply 
+``` JS
+Function.prototype.myApply = function ( context, args ) {
+  context = context || window
+  args = args || []
+
+  const key = Symbol()
+
+  context[key] = this
+
+  const result = context[key](...args)
+  
+  delete context[key]
+
+  return result
+}
+```
+
+#### call
+``` JS
+Function.prototype.myCall = function ( context, ...args ) {
+  context = context || window
+  args = args || []
+
+  const key = Symbol()
+
+  context[key] = this
+
+  const result = context[key](...args)
+
+  delete context[key]
+
+  return result
+}
 ```
 
 ### 内存泄露
