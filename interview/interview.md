@@ -177,15 +177,16 @@ Function.prototype.myCall = function ( context, ...args ) {
 
 #### bind
 ``` JS
-Function.prototype.myBind = function (context) {
+Function.prototype.myBind = function (context, ...args) {
   if (typeof this !== 'function') {
     throw new Error('this must be a function!')
   }
   context = context || window
+  args = args || []
   const key = Symbol()
   context[key] = this
-  return function (...args) {
-    return context[key](...args)
+  return function (...newArgs) {
+    return context[key](...args, ...newArgs)
   }
 }
 ```
