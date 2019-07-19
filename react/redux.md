@@ -1,40 +1,24 @@
 # redux
-1. store = createStore(reducer, preloadedState, enhancer)
+## 1. store = createStore(reducer, preloadedState, enhancer)
+返回一个对象API { subscribe, getState, dispatch, … }
 
-  返回一个对象API { subscribe, getState, dispatch, … }
+## 2. subscribe = (listener) => unsubscribe
+绑定响应事件，该事件函数获取store状态值，以改变组件状态值。返回一个该事件的解绑函数，用于组件销毁时调用。
 
-2. subscribe = (listener) => unsubscribe
+## 3. getState = () => storeStateThree
+返回store的状态树
 
-  绑定响应事件，该事件函数获取store状态值，以改变组件状态值。
-  返回一个该事件的解绑函数，用于组件销毁时调用。
+## 4. dispatch = ( action ) => action
+通过`action.type`触发对应`type`的`reducer`处理逻辑。因此，每一个action其实是去响应了所有的reducer，并且type值必须在整个项目中时唯一的。
 
-3. getState = () => storeStateThree
+## 5. reducer = ( previousState, action ) => newState
+`combineReducers = () => reducer`。单一的reducer没什么可以讲的，`combineReducers`的作用是将无数个reducer分离，避免过于臃肿难以维护。其中原理并不复杂，仅仅是将每个reducer作了分离，同时根据`combineReducers`传入的key值，将state树作相应枝干。
 
-  返回store的状态树
+## 6. applyMiddleware  =  (…middleware) => {…store, dispatch}
+createStore其preloadedState与enhancer是可有的，根据规则，reducer和enhancer为函数，preloadedState为对象。因此在**redux—createStore.js**中，当第二个实参为函数，同时第三个参数undefined时，会调用`enhancer`：enhancer( createStore )( reducer, preloadedState )<br />
 
-4. dispatch = ( action ) => action
-
-  通过action.type触发对应type 的reducer处理逻辑
-  因此，每一个action其实是去响应了所有的reducer，
-  因此，type值必须在整个项目中时唯一的。
-
-5. reducer = ( previousState, action ) => newState
-
-  `combineReducers = () => reducer`
-  单一的reducer没什么可以讲的，combineReducers的作用是将无数个reducer分离，避免过于臃肿难以维护。
-  其中原理并不复杂，仅仅是将每个reducer作了分离，同时根据combineReducers传入的key值，将state树作相应枝干。
-
-6. applyMiddleware  =  (…middleware) => {…store, dispatch}
-
-  createStore其preloadedState与enhancer是可有的，根据规则，reducer和enhancer为函数，preloadedState为对象。因此在**redux—createStore.js**中，当第二个实参为函数，同时第三个参数undefined时，会调用：
-
-7. enhancer( createStore )( reducer, preloadedState )
-
-  enhancer即 中间件。`enhancer( createStore )` 返回一个带有中间件的createSore函数。换句话说，即将原来的createStore进行改造。
-  其中，有一个compose函数值得注意，功能表现为：
-  `compose(f,g,h)(…args)等同于f( g( h(…args) ) )`
-  这是未知个中间件组合的核心实现，核心在reduceRight()函数，该函数从右侧执行，并将其返回的值传给下一个。精妙在其第二个参数，为自执行表达式
-  源码为ES6的实现，ES5的实现如下：
+`enhancer`即 中间件。`enhancer( createStore )` 返回一个带有中间件的createSore函数。换句话说，即将原来的createStore进行改造。<br />
+其中，有一个compose函数值得注意，功能表现为：`compose(f,g,h)(…args)等同于f( g( h(…args) ) )`。这是未知个中间件组合的核心实现，核心在reduceRight()函数，该函数从右侧执行，并将其返回的值传给下一个。精妙在其第二个参数，为自执行表达式，源码为ES6的实现，ES5的实现如下：
     
 ```js
 function compose() {
@@ -64,7 +48,8 @@ function compose() {
 ```
 
 基于上面的applyMiddleware，编写中间件。上面已经提到 中间件的作用是改造dispatch。在业务逻辑中，像往常一样调用dispatch，但首先会通过中间件，最后达到原生的dispatch。
-**applyMiddleware.js中**，最精华的一行代码：
+## 7. applyMiddleware.js中
+最精华的一行代码：
 
 ``` js
 dispatch = compose(...chain)(store.dispatch)
