@@ -149,20 +149,15 @@ fn.apply(context, [arg1, arg2, arg3])
 fn.call(context, arg1, arg2, arg3)
 ```
 
-#### apply 
+#### apply
 ``` JS
 Function.prototype.myApply = function ( context, args ) {
   context = context || window
   args = args || []
-
   const key = Symbol()
-
   context[key] = this
-
   const result = context[key](...args)
-  
   delete context[key]
-
   return result
 }
 ```
@@ -172,16 +167,26 @@ Function.prototype.myApply = function ( context, args ) {
 Function.prototype.myCall = function ( context, ...args ) {
   context = context || window
   args = args || []
-
   const key = Symbol()
-
   context[key] = this
-
   const result = context[key](...args)
-
   delete context[key]
-
   return result
+}
+```
+
+#### bind
+``` JS
+Function.prototype.myBind = function (context) {
+  if (typeof this !== 'function') {
+    throw new Error('this must be a function!')
+  }
+  context = context || window
+  const key = Symbol()
+  context[key] = this
+  return function (...args) {
+    return context[key](...args)
+  }
 }
 ```
 
@@ -197,9 +202,6 @@ Function.prototype.myCall = function ( context, ...args ) {
 最典型的DOM对象。它具有名字（tag name），样式（style），各种属性（attributes），事件（events）等等。我们通过多维度的描述这个对象具备的属性从而展现这个对象，操作这个对象。<br />
 在编程中，我们拆分逻辑，形成不同的对象，通过控制对象之间的交互，形成业务逻辑。<br />
 再比如构建自己的UI组件库，每一个组件都是一个对象。在使用时，不必关心内部细节，只需理解对外使用方法。
-
-### 函数式编程
-函数式编程的一个特点就是，允许把函数本身作为参数传入另一个函数，还允许返回一个函数！
 
 # 算法
 
@@ -223,10 +225,53 @@ arrB.map(item => {
 /* apply特性，第二个参数为数组 */
 arrA.push.apply(arrA, arrB)
 ```
+## 排序
+### 冒泡排序
+```JS
+function bubbleSort (arr) {
+  if (!Array.isArray(arr)) {
+    throw new Error('arr must be a Array!')
+  }
+  let len = arr.length
+  for (let i = 0; i < len - 1; i++ ) {
+    for (let j = i + 1; j < len; j++) {
+      if (arr[i] > arr[j]) {
+        // change
+        [ arr[i], arr[j] ] = [ arr[j], arr[i] ]
+      }
+    }
+  }
+  return arr
+}
+```
+上面版本的缺点在于即使给予一个升序数组，依然会依次循环比较一番，因此优化点在于当排序循环未结束时数组已排序成功时，如何break
+
+```JS
+function bubbleSort (arr) {
+  if (!Array.isArray(arr)) {
+    throw new Error('arr must be a Array!')
+  }
+  let len = arr.length
+  let hasChange
+  for (let i = 0; i < len - 1; i++ ) {
+    hasChange = false
+    for (let j = len - 1; j > i; j--) {
+      if (arr[j - 1] > arr[j]) { // min-value bubble from len - 1 to 0
+        // change
+        [ arr[j - 1], arr[j] ] = [ arr[j], arr[j - 1] ]
+        hasChange = true
+      }
+    }
+    !hasChange && break;
+  }
+  return arr
+}
+```
+`hasChange`表示在一轮循环中，是否发生了交换，如果没有发生，则表示此时数组已排序成功，反之则否
 
 ## 斐波那契数列
-规律：0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89......<br >
-公式：从第3（n = 2）项开始**F<sub>n</sub> = F<sub>n - 1</sub> + F<sub>n - 2</sub>**
+Regularity：0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89......<br >
+Formula：从第3（n = 2）项开始**F<sub>n</sub> = F<sub>n - 1</sub> + F<sub>n - 2</sub>**
 
 ### 1. 递归
 ```JS
