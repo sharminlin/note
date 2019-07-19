@@ -350,4 +350,3 @@ function binarySearch (arr, target) {
 
 ### 时间复杂度
 n个元素，每次分两半。第m次即剩下n/2<sup>m</sup>个元素，一直到只剩1个元素，即m = log<sub>2</sub>N
-
