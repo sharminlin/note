@@ -91,6 +91,7 @@ let tonny: Person = {
 
 #### 任意属性
 上述的规则限制了对象属性的自由性，当我们需要给对象添加任意一个属性时，可以使用`任意属性`的定义方法
+
 ``` TS
 interface Person {
   name: string;
@@ -98,9 +99,9 @@ interface Person {
   [propName: string]: any;
 }
 ```
-**一旦定义了任意属性，那么确定属性和可选属性的类型都必须是它的类型的子集。**
+**一旦定义了任意属性，那么确定属性和可选属性的类型都必须是它的类型的subset。**
 
-#### 只读属性
+#### 只读属性 readonly
 使用`readonly`修饰属性，使其只能在对象被赋值时赋值
 ``` TS
 interface Person {
@@ -114,7 +115,8 @@ interface Person {
 ``` TS
 let arr1: number [] = [1, 2, 3, 4]
 let arr2: string [] = ['1', '2', '3', '4']
-// 当然如果不限制，使用any
+
+// if you want to define an array by 'any'
 let arr3: any [] = [1, '2', null, undefined]
 ```
 
@@ -125,12 +127,121 @@ let arr: Array<number> = [1, 2, 3, 4]
 ```
 
 #### 接口表示
-其实数组也是对象，当然可以使用interface
+we can represent array in terms of 'interface', for it's also object.
+
 ``` TS
 interface NumberArray {
   [index: number]: number;
 }
-let fibonacci: NumberArray = [1, 1, 2, 3, 5];
+let arr: NumberArray = [1, 2, 3, 4];
+```
+
+### 函数类型
+函数类型的定义其实就是定义其输入和输出的参数类型。但是函数声明和函数表达式的定义是不一样的
+#### Function Declaration
+```TS
+function fn ( x: number, y: number ): number {
+  return x + y
+}
+```
+**输入参数的个数必须与定义时是一致的**
+
+#### Function Expression
+```TS
+let fn: (x: number, y: number) => number = function (x: number, y: number): number {
+  return x + y
+}
+```
+`(x: number, y: number) => number`其实就是定义`fn`函数类型表达式。<br />
+该表达式可以抽出为一个`interface`。
+
+``` TS
+interface sumFunc = {
+  (x: number, y: number): number;
+}
+
+let fn: sumFunc = function (x: number, y: number): number {
+  return x + y
+}
+```
+
+#### 可选的输入参数
+和`interface`表现一致，使用`?`表示参数是否可选。但是可选参数必须在确定参数之后。
+
+```TS
+function fn (name: string, age?: number): string {
+  return age ? `${name} is ${age}` ? `${name}`
+}
+```
+
+#### 默认值
+``` TS
+function buildName(firstName: string = 'Tom', lastName: string) {
+  return firstName + ' ' + lastName;
+}
+```
+
+#### 剩余参数
+同es6，使用扩展运算符，类型为数组
+
+``` TS
+function push(array: any[], ...items: any[]) {
+  items.forEach(function(item) {
+      array.push(item);
+  });
+}
+```
+
+#### 重载
+JS，函数重载，其实就是根据参数的个数类型执行不同的实现。TS依然没有离开这种设定
+
+``` TS
+function reverse(x: number): number;
+function reverse(x: string): string;
+function reverse(x: number | string): number | string {
+  if (typeof x === 'number') {
+    return Number(x.toString().split('').reverse().join(''));
+  } else if (typeof x === 'string') {
+    return x.split('').reverse().join('');
+  }
+}
+```
+### 类型断言
+> 类型断言（Type Assertion）可以用来手动指定一个值的类型。
+
+使用方式：`<类型>值` or `值 as 类型`
+
+``` ts
+function getLength(something: string | number): number {
+  if ( (<string>something).length ) {
+    return ( <string>something ).length;
+  } else {
+    return something.toString().length;
+  }
+}
+```
+
+### 声明文件
+
+### 内置对象
+
+## Advance
+### 类型别名
+顾名思义，给类型起一个nice name。
+
+``` TS
+type Str = string
+type NoS = number | string
+
+let str: Str = '9999';
+let str2: Nos = 12;
+```
+
+### 字符串字面量类型
+其实就是类似于`indexOf`校验的实现。
+
+``` TS
+type names = 'a' | 'b' | 'c';
 ```
 
 <br />(To be continued...)
