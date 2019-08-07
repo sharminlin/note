@@ -207,7 +207,7 @@ function reverse(x: number | string): number | string {
 }
 ```
 ### 类型断言
-> 类型断言（Type Assertion）可以用来手动指定一个值的类型。
+> 类型断言（Type Assertion）可以用来手动指定一个未知类型值的类型。
 
 使用方式：`<类型>值` or `值 as 类型`
 
