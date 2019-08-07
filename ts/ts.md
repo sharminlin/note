@@ -244,4 +244,38 @@ let str2: Nos = 12;
 type names = 'a' | 'b' | 'c';
 ```
 
+### 元组
+元组和数组的区别在于，数组是统一声明所有项的类型，元组是必须单独设置每一项的类型。
+``` TS
+let originArr: [string, number]
+originArr[0] = 'String'
+originArr[1] = 0
+```
+
+初始化时，必须设置所有值，否则抛出错误
+``` TS
+let originArr: [string, number] = ['String', 0]
+```
+
+在新增超出定义类型边界下标时，push的值必须是已定义类型的联合类型（即之一）
+``` TS
+let originArr: [string, number] = ['String', 0]
+originArr.push(0) // string | number
+originArr.push('xxx') // string | number
+```
+
+### 枚举 ENUM
+> 使用枚举我们可以定义一些带名字的常量。 使用枚举可以清晰地表达意图或创建一组有区别的用例。 TypeScript支持数字的和基于字符串的枚举。
+
+#### 数字枚举
+``` TS
+enum Direction = {
+  UP = 1,
+  DOWN,
+  LEFT,
+  RIGHT
+}
+```
+上述定义一个数字枚举
+
 <br />(To be continued...)
