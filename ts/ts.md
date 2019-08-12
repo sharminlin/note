@@ -1,5 +1,7 @@
 # typescript
-必须学会的一门js超集语言。感谢作者，[TypeScript入门教程](https://ts.xcatliu.com)<br/>
+必须学会的一门js超集语言。参考：<br />
+[TypeScript入门教程](https://ts.xcatliu.com)<br/>
+[TypeScript Handbook（中文版）](https://zhongsp.gitbooks.io/typescript-handbook/content/)
 
 ## BASE
 ### 原始数据类型 Primitive data types
@@ -269,13 +271,33 @@ originArr.push('xxx') // string | number
 
 #### 数字枚举
 ``` TS
-enum Direction = {
+enum Direction {
   UP = 1,
   DOWN,
   LEFT,
   RIGHT
 }
+
+let direct: Direction;
+direct = Direction.DOWN // 2
+
 ```
-上述定义一个数字枚举
+上述定义一个数字枚举，`UP`赋值为1，则后续属性值会自增长（如果`UP`未声明值，则从`0`开始自增长）。声明`Direction`枚举类型的变量`direct`，它的取值必须是以`Direction[key]`来实现映射值。<br />
+
+枚举值可以除了使用静态值，还可以使用`计算值`（比如：函数返回值）。如果存在计算值属性，则该属性必然是在具备`initializer 初始化器`的属性的前面，或者是在最后。换句话说针对不带`initializer`的属性，其可以在第一位，or 数字常量 or 具备`initializer`的属性之后。
+
+#### 字符串枚举
+``` TS
+enum Direction {
+  UP = 'TOP',
+  DOWN = 'BOTTOM',
+  LEFT = 'LEFT',
+  RIGHT = 'RIGHT'
+}
+
+let direct: Direction;
+direct = Direction.DOWN // BOTTOM
+```
+字符串枚举，属性值皆为字符串，可以很好的序列化。
 
 <br />(To be continued...)
