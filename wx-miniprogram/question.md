@@ -80,7 +80,7 @@ wxss中无法设置本地路径图片，必须写入base64格式。可以写在�
 
 到此为止一切都很顺利，唯一的不友好的地方在于downloadFile获取到的文件名为压缩过的乱码。在一系列寻找问题之后，找到微信操作文件对象`FileSystemManager`，使用其函数renameSync可以更改文件名。<br />
 
-第一次尝试：`wx.downloadFile` -> `wx.saveFile` -> `rename` -> `wx.openDocument`。结果直接报错，无权限更改文件。再次努力寻找解决方法后，终于得见曙光，以下是代码实现
+第一次尝试：`wx.downloadFile` -> `wx.saveFile` -> `rename` -> `wx.openDocument`。结果直接报错，无权限更改文件。再次努力寻找解决方法后，终于峰回路转，以下是代码实现
 ```JS
 wx.downloadFile({
   url: '', // 服务器文件路径
