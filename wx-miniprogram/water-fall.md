@@ -27,8 +27,8 @@ break-inside: auto | avoid | avoid-page | avoid-column;
 auto | 指定在元素中不强制也不禁止分页/分栏符
 avoid | 指定在元素中避免产生分页/分栏符
 avoid-page | 指定在元素中避免产生分页/分栏符
-avoid-column | 指定避免在元素内部出现列分隔符。
-avoid-region | 指定避免在元素内出现区域分隔符。
+avoid-column | 指定避免在元素内部出现列分隔符
+avoid-region | 指定避免在元素内出现区域分隔符
 inherit | 继承
 
 在这里，我们使用`avoid`。使上下元素可以填充空白区域：
