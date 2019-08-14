@@ -87,7 +87,7 @@ inherit | 继承
   }
 }
 ```
-在每次得到一个预渲染的单元模块之后，再计算当前左右列的高度，将之加入到该列对应`list`中。
+在每次得到一个预渲染的单元模块数据之后，再计算当前左右列的高度，将之加入到高度较低的一列对应的`water list`中。因为无限滚动加载总是得到一个数组，因此需要用到循环：
 
 ``` JS
 {
@@ -105,7 +105,8 @@ inherit | 继承
         }).select('#fall-right').boundingClientRect(rect => {
           rightHeight = rect.height
         }).exec()
-      
+
+      // push
       ;
       leftHeight <= rightHeight
         ? this.setData({ [`wineLeftList[${leftLen}]`]: item })
@@ -116,7 +117,7 @@ inherit | 继承
 ```
 
 ## 问题
-上述逻辑看似OK，但忽略了一个问题，也就是在获取当前列高的时候，使用的`selector`方法是异步的。因此会产生一个`循环异步`的问题。<br />
+上述逻辑看似OK，但忽略了一个问题，也就是在获取当前列高的时候，使用的小程序的`selector`方法是异步的。因此会产生一个`循环异步`的问题。<br />
 可能第一反应是使用闭包，但在这里，循环的顺序是有序的，下一个循环必须等上一个循环执行完，才可以获取到新的列的高度。因此使用`async/await`实现同步阻塞循环。
 
 ## 解决
@@ -129,6 +130,7 @@ inherit | 继承
 
     for (let i = 0; i < listLen; i++) {
       let item = list[i]
+
       let { leftHeight, rightHeight } = await this.getWaterLRHeight()
       let leftLen = this.data.wineLeftList.length
       let rightRight = this.data.wineRightList.length
@@ -149,10 +151,8 @@ inherit | 继承
 
       query.select('#fall-left').boundingClientRect(rect => {
           leftHeight = rect.height
-          console.log('left')
         }).select('#fall-right').boundingClientRect(rect => {
           rightHeight = rect.height
-          console.log('right')
         }).exec(() => {
           resolve({ leftHeight, rightHeight })
         })
