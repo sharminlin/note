@@ -34,7 +34,8 @@ const paths = {
   images: `${src}/images/**`,
   js: `${src}/**/*.js`,
   wxss: `${src}/**/*.wxss`,
-  sass: `${src}/**/*.scss`
+  sass: `${src}/**/*.scss`,
+  wxs: `${src}/**/*.wxs`
 }
 
 /**
@@ -42,7 +43,7 @@ const paths = {
  */
 gulp.task('test', gulp.series(
   clean,
-  gulp.parallel(json, images, wxml, wxss, js, sass)
+  gulp.parallel(json, images, wxml, wxss, js, sass, wxs)
 ))
 
 
@@ -51,7 +52,7 @@ gulp.task('test', gulp.series(
  */
 gulp.task('dev', gulp.series(
   clean,
-  gulp.parallel(json, images, wxml, wxss, js, sass),
+  gulp.parallel(json, images, wxml, wxss, js, sass, wxs),
   watch
 ))
 
@@ -60,7 +61,7 @@ gulp.task('dev', gulp.series(
  */
 gulp.task('build', gulp.series(
   clean,
-  gulp.parallel(json, images, wxml, wxss, js, sass)
+  gulp.parallel(json, images, wxml, wxss, js, sass, wxs)
 ))
 
 /**
@@ -97,6 +98,11 @@ function json () {
 
 function wxml () {
   return gulp.src(paths.wxml)
+    .pipe(gulp.dest(dist))
+}
+
+function wxs () {
+  return gulp.src(paths.wxs)
     .pipe(gulp.dest(dist))
 }
 
