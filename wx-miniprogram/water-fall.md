@@ -53,9 +53,10 @@ break-inside: auto | avoid | avoid-page | avoid-column;
 
 这种情况暂时无法解决，因此准备换一种思路实现。
 
-## 别路
-在布局上，将瀑布块分成两列view，分别渲染两个list。`cell-item`为展示的单元模块。
+## JS动态渲染
+选择使用JS进行动态填充。在布局上，将瀑布块分成两列view，分别渲染两个list。`cell-item`为展示的单元模块。<br />
 
+wxml: 
 ``` html
 <view class="water-fall clearfix">
   <view class="fall-left" id="fall-left">
@@ -71,7 +72,7 @@ break-inside: auto | avoid | avoid-page | avoid-column;
   </view>
 </view>
 ```
-
+sass:
 ``` scss
 .waterfall {
   padding: 0 20rpx;
@@ -87,7 +88,8 @@ break-inside: auto | avoid | avoid-page | avoid-column;
   }
 }
 ```
-在每次得到一个预渲染的单元模块数据之后，再计算当前左右列的高度，将之加入到高度较低的一列对应的`water list`中。因为无限滚动加载总是得到一个数组，因此需要用到循环：
+
+在每次得到一个预渲染的单元模块数据之后，再计算当前左右列的高度，将之加入到高度较低的一列对应的`water list`中。当然这里并不是一个单元项数据，因为无限滚动加载总是得到一个数组：
 
 ``` JS
 {
@@ -117,8 +119,8 @@ break-inside: auto | avoid | avoid-page | avoid-column;
 ```
 
 ## 问题
-上述逻辑看似OK，但忽略了一个问题，也就是在获取当前列高的时候，使用的小程序的`selector`方法是异步的。因此会产生一个`循环异步`的问题。<br />
-可能第一反应是使用闭包，但在这里，循环的顺序是有序的，下一个循环必须等上一个循环执行完，才可以获取到新的列的高度。因此使用`async/await`实现同步阻塞循环。
+上述逻辑看似OK，但忽略了一个问题，也就是在获取当前列高的时候，使用的小程序的`SelectorQuery`方法是异步的。因此会产生一个`循环异步`的问题。<br />
+第一反应可能是使用闭包，但在这里，循环的顺序是有序的，下一个循环必须等上一个循环执行完，才可以获取到新的列的高度。因此使用`async/await`实现同步阻塞循环。
 
 ## 解决
 这里是解决之后的JS。
@@ -132,13 +134,7 @@ break-inside: auto | avoid | avoid-page | avoid-column;
       let item = list[i]
 
       let { leftHeight, rightHeight } = await this.getWaterLRHeight()
-      let leftLen = this.data.wineLeftList.length
-      let rightRight = this.data.wineRightList.length
-
-      ;
-      leftHeight <= rightHeight
-        ? this.setData({ [`wineLeftList[${leftLen}]`]: item })
-        : this.setData({ [`wineRightList[${rightRight}]`]: item })
+      await this.updateWaterList(leftHeight, rightHeight)
     }
   },
 
@@ -157,16 +153,30 @@ break-inside: auto | avoid | avoid-page | avoid-column;
           resolve({ leftHeight, rightHeight })
         })
     })
+  },
+
+  // 根据高度更新左右栏之一的数据
+  updateWaterList (leftHeight, rightHeight) {
+    return new Promise(resolve => {
+      let leftLen = this.data.wineLeftList.length
+      let rightRight = this.data.wineRightList.length
+  
+      ;
+      leftHeight <= rightHeight
+        ? this.setData({ [`wineLeftList[${leftLen}]`]: item }, () => { resolve() })
+        : this.setData({ [`wineRightList[${rightRight}]`]: item, () => { resolve() } })
+    })
   }
 }
 ```
 
 **顺便一提：**
-1. 小程序的`selector`中的`exec`函数，表示在当前`selector`调用响应完全之后执行的回调函数。
+1. 小程序的`SelectorQuery`中的`exec`函数，表示在当前`SelectorQuery`调用响应完全之后执行的回调函数。
 2. 小程序不支持`async/await`，这需要你自己解决，我便不在此处多言。
-3. 在添加单元块时，不使用`push`。因为会造成整个数组的重渲染。因此在某些场合尽量避免使用`push`。
+3. setData在更新数据之后，并不会立即引起视图层的渲染。因此需要使用其第二个回调参数，表示视图渲染完成，我们再进行下一个循环。
 4. 因为单元块里面其实包含图片（其实大多数都是包含图片的- -），请使用小程序`image`组件的`mode`为`widthFix`。缩放模式，宽度不变，高度自动变化，保持原图宽高比不变。你便不必再去对图片的高度进行计算了。
 5. 给单元块加一个动画也许会更友好。
+
 ``` css
 .item {
   animation: waterImage 4s;
@@ -181,3 +191,5 @@ break-inside: auto | avoid | avoid-page | avoid-column;
   }
 }
 ```
+
+如有不足，欢迎指出。共勉。
