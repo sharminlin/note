@@ -4,10 +4,10 @@
 ## 尝试
 首先我们尝试使用css3的`column`特性。`column`具有几个属性，在这里不做过多赘述。瀑布流中主要使用`column-count`和`column-gap`。<br />
 
-属性 | 作用
-:-: | :-:
-column-count | 将子元素块分为几列
-column-gap | 列之间的间隔
+| 属性值 | 描述 |
+| -- | -- |
+| column-count | 将子元素块分为几列 |
+| column-gap | 列之间的间隔 |
 
 根据需求，我们将给成两列，列之间间隔为20rpx，使用如下：
 ``` css
@@ -22,14 +22,14 @@ column-gap | 列之间的间隔
 break-inside: auto | avoid | avoid-page | avoid-column;
 ```
 
-属性值 | 描述
-:-: | :-:
-auto | 指定在元素中不强制也不禁止分页/分栏符
-avoid | 指定在元素中避免产生分页/分栏符
-avoid-page | 指定在元素中避免产生分页/分栏符
-avoid-column | 指定避免在元素内部出现列分隔符
-avoid-region | 指定避免在元素内出现区域分隔符
-inherit | 继承
+| 属性值 | 描述 |
+| -- | -- |
+| auto | 指定在元素中不强制也不禁止分页/分栏符 |
+| avoid | 指定在元素中避免产生分页/分栏符 |
+| avoid-page | 指定在元素中避免产生分页/分栏符 |
+| avoid-column | 指定避免在元素内部出现列分隔符 |
+| avoid-region | 指定避免在元素内出现区域分隔符 |
+| inherit | 继承 |
 
 在这里，我们使用`avoid`。使上下元素可以填充空白区域：
 ``` css 
