@@ -131,10 +131,8 @@ sass:
     let listLen = list.length
 
     for (let i = 0; i < listLen; i++) {
-      let item = list[i]
-
       let { leftHeight, rightHeight } = await this.getWaterLRHeight()
-      await this.updateWaterList(leftHeight, rightHeight)
+      await this.updateWaterList(list[i], leftHeight, rightHeight)
     }
   },
 
@@ -156,15 +154,15 @@ sass:
   },
 
   // 根据高度更新左右栏之一的数据
-  updateWaterList (leftHeight, rightHeight) {
+  updateWaterList (item, leftHeight, rightHeight) {
     return new Promise(resolve => {
       let leftLen = this.data.wineLeftList.length
       let rightRight = this.data.wineRightList.length
   
       ;
       leftHeight <= rightHeight
-        ? this.setData({ [`wineLeftList[${leftLen}]`]: item }, () => { resolve() })
-        : this.setData({ [`wineRightList[${rightRight}]`]: item, () => { resolve() } })
+        ? this.setData({ [`wineLeftList[${leftLen}]`]: item }, () => { resolve() } )
+        : this.setData({ [`wineRightList[${rightRight}]`]: item}, () => { resolve() })
     })
   }
 }
