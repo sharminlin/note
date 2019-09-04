@@ -68,7 +68,9 @@ export function install (_Vue) {
 }
 ```
 
-他接收了`Vue`的构造器命名为`_Vue`，并且bao
+他接收了`Vue`的构造器命名为`_Vue`，并且保留起来进行注册重复之校验，然后执行`applyMixin(Vue)`。那么我们看看`applyMixin`又干了什么。
+
+
 
 ## State
 
