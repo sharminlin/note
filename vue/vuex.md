@@ -69,7 +69,7 @@ export function install (_Vue) {
 }
 ```
 
-他接收了`Vue`的构造器命名为`_Vue`，并且保留起来进行注册重复之校验，再执行`applyMixin(Vue)`。那么我们看看`applyMixin`又干了什么。
+该函数接收了`Vue`的构造器命名为`_Vue`，并且保留起来进行注册重复之校验，再执行`applyMixin(Vue)`。那么我们看看`applyMixin`又干了什么。
 
 ``` js
 // ./mixin.js
@@ -111,13 +111,16 @@ export default function (Vue) {
 这是一个公共的mixin方法，做了一个全局的混入。主要就是在组件实例创建之后，将`$store`挂载到组件实例上，因此我们平时在组件内部可以直接使用`this.$store`来访问`store`。那么这其中的`this.options.store`是从哪儿来的呢？通常，在使用`vuex`的时候我们会将其注入到根组件中，如下：
 
 ``` js
+// main.js
 import Vue from 'vue'
 import Vuex from 'vuex' 
 import App from './App'
 
 Vue.use(Vuex)
 
-const store =  new Vuex.Store()
+const store =  new Vuex.Store({
+  // ...
+})
 
 new Vue({
   el: '#app',
@@ -127,8 +130,83 @@ new Vue({
 })
 ```
 
-可以看到，根组件实例上挂载了一个`store`，这就是所有子组件的`store`的由来。再整个注入过程中，说起来是那么冗长，但其实非常简单。 <br />
+可以看到，根组件实例上挂载了一个`store`，这就是所有子组件的`store`的由来。整个注入过程，说起来是那么冗长，但其实非常简单。 <br />
+接下来，我们去看看`soter`的构造器`Vuex.Store`的具体实现。
 
+## new Vuex.Store()
+Store的代码不适合单独抽离出来说明，因此一部分解释我会放在代码里面，相信这样比对代码，会更清晰一点。同时我会省略一部分无关紧要的代码，尽量不影响阅读。
+
+### constructor
+``` js
+// ./store.js
+// ...
+
+let Vue
+
+export class Store {
+  constructor (options = {}) {
+    // 上述声明了一个Vue变量，这个变量install方法中会被赋值，此处避免在生成store实例时没有事先注册
+    if (!Vue && typeof window !== 'undefined' && window.Vue) {
+      install(window.Vue)
+    }
+
+    // ...
+
+    // 取出插件选项以及严格模式默认`false`
+    const {
+      plugins = [],
+      strict = false
+    } = options
+
+    // 声名一大堆私有属性
+    this._committing = false
+    this._actions = Object.create(null)
+    this._actionSubscribers = []
+    this._mutations = Object.create(null)
+    this._wrappedGetters = Object.create(null)
+    this._modules = new ModuleCollection(options)
+    this._modulesNamespaceMap = Object.create(null)
+    this._subscribers = []
+    this._watcherVM = new Vue()
+
+    // 确保方法 dispatch 和 commit 内部 this 指向 store 
+    const store = this
+    const { dispatch, commit } = this // 解构
+
+    // 重定义方法 dispatch 和 commit
+    this.dispatch = function boundDispatch (type, payload) {
+      return dispatch.call(store, type, payload) // 使用call绑定this
+    }
+
+    this.commit = function boundCommit (type, payload, options) {
+      return commit.call(store, type, payload, options) // 使用call绑定this
+    }
+
+    // 严格模式
+    this.strict = strict
+
+    // 获取根部state状态
+    const state = this._modules.root.state
+
+    // 初始化module以及子项module
+    installModule(this, state, [], this._modules.root)
+
+    // 设置 store._vm
+    resetStoreVM(this, state)
+
+    // 执行插件
+    plugins.forEach(plugin => plugin(this))
+
+    // 是否使用vue-devtools调试工具，Vue.config.devtools默认在开发环境为true
+    const useDevtools = options.devtools !== undefined ? options.devtools : Vue.config.devtools
+    if (useDevtools) {
+      devtoolPlugin(this)
+    }
+  }
+}
+```
+
+`constructor`方法做了一系列的初始化处理，我们大致知道了它究竟做了什么，但并不知道为什么要这样做。OK，我们接下来就一步一步去深入了解其中的机理。
 
 ## State
 
