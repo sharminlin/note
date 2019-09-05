@@ -54,6 +54,7 @@ export default {
 
 ``` js
 // ./store.js
+// ...
 export function install (_Vue) {
   if (Vue && _Vue === Vue) {
     if (process.env.NODE_ENV !== 'production') {
@@ -70,6 +71,63 @@ export function install (_Vue) {
 
 他接收了`Vue`的构造器命名为`_Vue`，并且保留起来进行注册重复之校验，再执行`applyMixin(Vue)`。那么我们看看`applyMixin`又干了什么。
 
+``` js
+// ./mixin.js
+export default function (Vue) {
+  const version = Number(Vue.version.split('.')[0])
+
+  if (version >= 2) {
+    Vue.mixin({ beforeCreate: vuexInit })
+  } else {
+    // override init and inject vuex init procedure
+    // for 1.x backwards compatibility.
+    const _init = Vue.prototype._init
+    Vue.prototype._init = function (options = {}) {
+      options.init = options.init
+        ? [vuexInit].concat(options.init)
+        : vuexInit
+      _init.call(this, options)
+    }
+  }
+
+  /**
+   * Vuex init hook, injected into each instances init hooks list.
+   */
+
+  function vuexInit () {
+    const options = this.$options
+    // store injection
+    if (options.store) {
+      this.$store = typeof options.store === 'function'
+        ? options.store()
+        : options.store
+    } else if (options.parent && options.parent.$store) {
+      this.$store = options.parent.$store
+    }
+  }
+}
+```
+
+这是一个公共的mixin方法，做了一个全局的混入。主要就是在组件实例创建之后，将`$store`挂载到组件实例上，因此我们平时在组件内部可以直接使用`this.$store`来访问`store`。那么这其中的`this.options.store`是从哪儿来的呢？通常，在使用`vuex`的时候我们会将其注入到根组件中，如下：
+
+``` js
+import Vue from 'vue'
+import Vuex from 'vuex' 
+import App from './App'
+
+Vue.use(Vuex)
+
+const store =  new Vuex.Store()
+
+new Vue({
+  el: '#app',
+  store,
+  components: { App },
+  template: '<App />'
+})
+```
+
+可以看到，根组件实例上挂载了一个`store`，这就是所有子组件的`store`的由来。再整个注入过程中，说起来是那么冗长，但其实非常简单。 <br />
 
 
 ## State
