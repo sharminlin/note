@@ -98,7 +98,7 @@ export function install (_Vue) {
 }
 ```
 
-该函数接收了`Vue`的构造器命名为`_Vue`，并且保留起来进行注册重复之校验，再执行`applyMixin(Vue)`。那么我们看看`applyMixin`又干了什么。
+该函数接收了`Vue`的构造器命名为`_Vue`，并且保留起来进行注册重复之校验，再执行`applyMixin(Vue)`。那么`applyMixin`又干了什么。
 
 ``` js
 // ./mixin.js
@@ -137,7 +137,7 @@ export default function (Vue) {
 }
 ```
 
-这是一个公共的mixin方法，做了一个全局的混入。主要就是在组件实例创建之后，将`$store`挂载到组件实例上，因此我们平时在组件内部可以直接使用`this.$store`来访问`store`。那么这其中的`this.options.store`是从哪儿来的呢？通常，在使用`vuex`的时候我们会将其注入到根组件中，如下：
+这是一个公共的mixin方法，做了一个全局的混入。主要就是在组件实例创建之后，将`$store`挂载到组件实例上，因此我们平时在组件内部可以直接使用`this.$store`来访问`store`。那么这其中的`this.options.store`是从哪儿来的呢？我们想想通常时如何加载`vuex`的。如下：
 
 ``` js
 // main.js
@@ -236,6 +236,12 @@ export class Store {
 ```
 
 `constructor`方法做了一系列的初始化处理，我们大致知道了它究竟做了什么，但并不知道为什么要这样做。OK，我们接下来就一步一步去深入了解其中的机理。
+
+### ModuleCollection
+``` js
+// ./module/module-collection.js
+
+```
 
 ## State
 
