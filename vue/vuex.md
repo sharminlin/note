@@ -8,7 +8,34 @@
 总而言之，vuex是一个基于vue的状态管理**插件**。这个插件如何使用，不在此篇文章考虑范围。有意者可移步[vuex官方文档](https://vuex.vuejs.org/zh/)。
 
 ## 注入
-在install安装好依赖之后，我们都会执行`Vue.use(Vuex)`。`Vue.use()`是vue注册插件的api，接受一个选项参数（`plugin`）。该参数可取类型为Object或者Function。当为对象时，必须提供一个名为`install`的函数；如果为函数，则该函数即为`install`。`install`在use时会被立即执行，获得一个`Vue`构造器和一个选项对象。下面是官网的一个`install`函数介绍，`vuex`不免也是基于此。
+在install安装好依赖之后，我们都会执行`Vue.use(Vuex)`。`Vue.use()`是vue注册插件的api，先看看`vue`中的源码：
+``` js
+function initUse (Vue) {
+  Vue.use = function (plugin) {
+    var installedPlugins = (this._installedPlugins || (this._installedPlugins = []));
+
+    // 已存在则不再注册
+    if (installedPlugins.indexOf(plugin) > -1) {
+      return this
+    }
+
+    // 将Vue构造器传入其中
+    var args = toArray(arguments, 1);
+    args.unshift(this);
+
+    // 执行install方法
+    if (typeof plugin.install === 'function') {
+      plugin.install.apply(plugin, args);
+    } else if (typeof plugin === 'function') {
+      plugin.apply(null, args);
+    }
+    installedPlugins.push(plugin);
+    return this
+  };
+}
+```
+
+可以观察到该方法接受一个选项参数（`plugin`）。该参数可取类型为`Object | Function`。当为Object时，必须提供一个名为`install`的方法。`install`在use时会被立即执行，获得一个`Vue`构造器和一个选项对象。下面是官网的一个`install`方法使用介绍：
 
 ``` js
 // install
@@ -32,7 +59,9 @@ function install (Vue, options) {
   Vue.prototype.$myMethod = function (methodOptions) {}
 }
 ```
-我们先看看在`vuex`的入口文件中，返回了什么。
+
+基于此，我们先看看在`vuex`的入口文件中，返回了什么。
+
 ``` js
 // ./index.js
 import { Store, install } from './store'
