@@ -282,16 +282,22 @@ register (path, rawModule, runtime = true) {
 在`register`中又出现了一个陌生的构造器`Module`，它实质性地改变了`store`的数据结构。注册之后生成的`_modules`的每一个节点都是Module实例，如下：
 
 ``` ts
+// 具体可见./module/module.js
 _modules.root = {
   state: {},
   _rawModule: {}, // 当前层级的原始数据
-  _children: {
-    [moduleName]: {
-      state: {},
-      _rawModule: {},
-      _children: {}
-    }
-  } // 子结构
+  _children: {}, // 子结构
+  __prop__: {
+    namespaced,
+    addChild,
+    removeChild,
+    getChild,
+    update,
+    forEachChild,
+    forEachGetter,
+    forEachAction,
+    forEachMutation
+  }
 }
 ```
 
