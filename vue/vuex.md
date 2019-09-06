@@ -238,10 +238,47 @@ export class Store {
 `constructor`方法做了一系列的初始化处理，我们大致知道了它究竟做了什么，但并不知道为什么要这样做。OK，我们接下来就一步一步去深入了解其中的机理。
 
 ### ModuleCollection
+`ModuleCollection`构造器目的是将传入的`options`整合成需要的数据结构。
+
 ``` js
 // ./module/module-collection.js
 
+// ...
+
+constructor (rawRootModule) {
+  // register root module (Vuex.Store options)
+  this.register([], rawRootModule, false)
+},
+
+// ...
+
+register (path, rawModule, runtime = true) {
+  if (process.env.NODE_ENV !== 'production') {
+    assertRawModule(path, rawModule)
+  }
+
+  // 生成 root module 或者 _child module
+  const newModule = new Module(rawModule, runtime)
+  if (path.length === 0) {
+    this.root = newModule
+  } else {
+    const parent = this.get(path.slice(0, -1))
+    parent.addChild(path[path.length - 1], newModule)
+  }
+
+  // 递归生成child modules
+  if (rawModule.modules) {
+    // key 为module name
+    forEachValue(rawModule.modules, (rawChildModule, key) => {
+      this.register(path.concat(key), rawChildModule, runtime)
+    })
+  }
+}
 ```
+
+
+
+
 
 ## State
 
