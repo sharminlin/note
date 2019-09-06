@@ -254,6 +254,7 @@ constructor (rawRootModule) {
 
 register (path, rawModule, runtime = true) {
   if (process.env.NODE_ENV !== 'production') {
+    // 断言方法，校验原始数据的格式
     assertRawModule(path, rawModule)
   }
 
@@ -274,11 +275,111 @@ register (path, rawModule, runtime = true) {
     })
   }
 }
+
+// ...
 ```
 
+在`register`中又出现了一个陌生的构造器`Module`，它实质性地改变了`store`的数据结构。注册之后生成的`_modules`的每一个节点都是Module实例，如下：
 
+``` ts
+_modules.root = {
+  state: {},
+  _rawModule: {}, // 当前层级的原始数据
+  _children: {
+    [moduleName]: {
+      state: {},
+      _rawModule: {},
+      _children: {}
+    }
+  } // 子结构
+}
+```
 
+### installModule
+``` js
+installModule(this, state, [], this._modules.root)
+```
+再次回到`Store`的构造函数中，往下执行了`installModule`，顾名思义，初始化module。那么它和上面的`new ModuleCollection()`有什么区别与关系呢？
+``` js
+// ./store.js
 
+// ...
+/*
+ * @param store 上下文
+ * @param rootState 根节点state
+ * @param path {Array} 由moduleName组成的链式路径数组
+ * @param module 当前你层级
+ * @param hot 是否热更新
+ */
+function installModule (store, rootState, path, module, hot) {
+  // path为空表示是根节点
+  const isRoot = !path.length
+
+  // 获取当前节点命名空间 getNamespace是Module的一个方法
+  const namespace = store._modules.getNamespace(path)
+
+  // register in namespace map
+  if (module.namespaced) {
+    // 判重
+    if (store._modulesNamespaceMap[namespace] && process.env.NODE_ENV !== 'production') {
+      console.error(`[vuex] duplicate namespace ${namespace} for the namespaced module ${path.join('/')}`)
+    }
+
+    // _modulesNamespaceMap 根据命名空间值控制存储当前节点值
+    store._modulesNamespaceMap[namespace] = module
+  }
+
+  // 设置非根节点的state，调用形式rootState.moduleName[key]的由来
+  if (!isRoot && !hot) {
+    const parentState = getNestedState(rootState, path.slice(0, -1))
+    const moduleName = path[path.length - 1]
+    store._withCommit(() => {
+      Vue.set(parentState, moduleName, module.state)
+    })
+  }
+
+  // 声明当前节点上下文，保证本身的mutations actions 以及getter在使用时，传入局部state对象
+  const local = module.context = makeLocalContext(store, namespace, path)
+
+  // 注册当前节点的mutations至store._mutations
+  module.forEachMutation((mutation, key) => {
+    const namespacedType = namespace + key
+
+    // mutation = (state, payload) => {}
+    registerMutation(store, namespacedType, mutation, local)
+  })
+
+  // 注册当前节点的actions至store._actions
+  module.forEachAction((action, key) => {
+    // action: Object | function
+    const type = action.root ? key : namespace + key
+    const handler = action.handler || action
+
+    // action = ({ dispatch, commit, getters, state, rootGetters. rootState }, payload, cb) => {}
+    registerAction(store, type, handler, local)
+  })
+
+  // 注册当前节点的getter至store._wrappedGetters
+  module.forEachGetter((getter, key) => {
+    const namespacedType = namespace + key
+
+    // getter = (localState, localGetters, rootState, rootGetters) => {}
+    registerGetter(store, namespacedType, getter, local)
+  })
+
+  // 递归install
+  module.forEachChild((child, key) => {
+    installModule(store, rootState, path.concat(key), child, hot)
+  })
+}
+
+// ...
+
+```
+
+在`installModule`中，除了知道了各自节点的`state`的初始化，我们也明白了`_mutations`、`_actions`和`_wrappedGetters`的由来与作用。至于其中各自的`register`函数，就不贴在这儿占用空间了。详细的可以对照源码进行阅读。
+
+### resetStoreVM
 
 ## State
 
