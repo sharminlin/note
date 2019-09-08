@@ -509,7 +509,6 @@ function unifyObjectStyle (type, payload, options) {
 判断`type`是否是`Object`。因此通常我们调用`commit`时，传值`this.$store.commit(type, payload, options)`，同样，也可以使用`this.$store.commit({ type, payload, options })`的方式。<br>
 
 
-
 ## dispatch
 ``` js
  dispatch (_type, _payload) {
@@ -562,4 +561,214 @@ function unifyObjectStyle (type, payload, options) {
 }
 ```
 
-看玩之后，其实发现非常简单。我便不再赘述了。
+看完之后，其实发现代码逻辑非常简单。我便不在此赘述了。整个构造过程的讲解基本完毕，接下来，去看看`map`系列的几个函数。
+
+## map函数
+
+### normalizeNamespace and normalizeMap
+由于map的几个函数都使用了`normalizeNamespace`进行包装，以及`normalizeMap`方法，因此我们先来看看这个方法究竟做了什么
+
+``` js
+// ./helper.js
+
+/**
+ * Return a function expect two param contains namespace and map. it will normalize the namespace and then the param's function will handle the new namespace and the map.
+ * @param {Function} fn
+ * @return {Function}
+ */
+function normalizeNamespace (fn) {
+  return (namespace, map) => {
+    if (typeof namespace !== 'string') {
+      map = namespace
+      namespace = ''
+    } else if (namespace.charAt(namespace.length - 1) !== '/') {
+      namespace += '/'
+    }
+    return fn(namespace, map)
+  }
+}
+
+/**
+ * Normalize the map
+ * normalizeMap([1, 2, 3]) => [ { key: 1, val: 1 }, { key: 2, val: 2 }, { key: 3, val: 3 } ]
+ * normalizeMap({a: 1, b: 2, c: 3}) => [ { key: 'a', val: 1 }, { key: 'b', val: 2 }, { key: 'c', val: 3 } ]
+ * @param {Array|Object} map
+ * @return {Object}
+ */
+function normalizeMap (map) {
+  return Array.isArray(map)
+    ? map.map(key => ({ key, val: key }))
+    : Object.keys(map).map(key => ({ key, val: map[key] }))
+}
+```
+
+`normalizeNamespace`规范化命名空间`namespace`，同时考虑第一个参数非`string`时的`namespace`的情况下的处理。<br >
+`normalizeMap`方法通过注释很好理解。其实就是将数组或对象转为`{ key, val }`的形式。
+
+### mapState
+
+先想象一下是使用`mapState`的几种方式，之后再对照源码进行理解：
+
+``` js
+{
+  'computed': {
+    ...mapState(['name_1', 'name_2']),
+    ...mapState({
+      'name_3': state => state[moduleName]['name_3']
+    }),
+    ...mapState('namespace', {
+      'name_4': state => state['name_4']
+    })
+  }
+}
+```
+
+``` js
+/**
+ * Reduce the code which written in Vue.js for getting the state.
+ * @param {String} [namespace] - Module's namespace
+ * @param {Object|Array} states # Object's item can be a function which accept state and getters for param, you can do something for state and getters in it.
+ * @param {Object}
+ */
+export const mapState = normalizeNamespace((namespace, states) => {
+  const res = {}
+
+  // 将传入的state标准化，并处理赋值给res
+  normalizeMap(states).forEach(({ key, val }) => {
+    res[key] = function mappedState () {
+      // 先获取rootState and rootGetters
+      let state = this.$store.state
+      let getters = this.$store.getters
+
+      // 如果存在命名空间，则通过其值获取局部的state 和 getters
+      if (namespace) {
+        const module = getModuleByNamespace(this.$store, 'mapState', namespace)
+        if (!module) {
+          return
+        }
+        state = module.context.state
+        getters = module.context.getters
+      }
+
+      return typeof val === 'function'
+        ? val.call(this, state, getters)
+        : state[val]
+    }
+    // mark vuex getter for devtools
+    res[key].vuex = true
+  })
+  return res
+})
+```
+
+### mapMutations
+``` js
+/**
+ * Reduce the code which written in Vue.js for committing the mutation
+ * @param {String} [namespace] - Module's namespace
+ * @param {Object|Array} mutations # Object's item can be a function which accept `commit` function as the first param, it can accept anthor params. You can commit mutation and do any other things in this function. specially, You need to pass anthor params from the mapped function.
+ * @return {Object}
+ */
+export const mapMutations = normalizeNamespace((namespace, mutations) => {
+  const res = {}
+  normalizeMap(mutations).forEach(({ key, val }) => {
+    res[key] = function mappedMutation (...args) {
+      // Get the commit method from store
+      let commit = this.$store.commit
+      if (namespace) {
+        const module = getModuleByNamespace(this.$store, 'mapMutations', namespace)
+        if (!module) {
+          return
+        }
+        commit = module.context.commit
+      }
+      return typeof val === 'function'
+        ? val.apply(this, [commit].concat(args))
+        : commit.apply(this.$store, [val].concat(args))
+    }
+  })
+  return res
+})
+```
+
+
+### mapGetters
+``` js
+/**
+ * Reduce the code which written in Vue.js for getting the getters
+ * @param {String} [namespace] - Module's namespace
+ * @param {Object|Array} getters
+ * @return {Object}
+ */
+export const mapGetters = normalizeNamespace((namespace, getters) => {
+  const res = {}
+  normalizeMap(getters).forEach(({ key, val }) => {
+    // The namespace has been mutated by normalizeNamespace
+    val = namespace + val
+    res[key] = function mappedGetter () {
+      if (namespace && !getModuleByNamespace(this.$store, 'mapGetters', namespace)) {
+        return
+      }
+      if (process.env.NODE_ENV !== 'production' && !(val in this.$store.getters)) {
+        console.error(`[vuex] unknown getter: ${val}`)
+        return
+      }
+      return this.$store.getters[val] // 这里的取值等同于store._vm[val]
+    }
+    // mark vuex getter for devtools
+    res[key].vuex = true
+  })
+  return res
+})
+```
+
+### mapActions
+``` js
+/**
+ * Reduce the code which written in Vue.js for dispatch the action
+ * @param {String} [namespace] - Module's namespace
+ * @param {Object|Array} actions # Object's item can be a function which accept `dispatch` function as the first param, it can accept anthor params. You can dispatch action and do any other things in this function. specially, You need to pass anthor params from the mapped function.
+ * @return {Object}
+ */
+export const mapActions = normalizeNamespace((namespace, actions) => {
+  const res = {}
+  normalizeMap(actions).forEach(({ key, val }) => {
+    res[key] = function mappedAction (...args) {
+      // get dispatch function from store
+      let dispatch = this.$store.dispatch
+      if (namespace) {
+        const module = getModuleByNamespace(this.$store, 'mapActions', namespace)
+        if (!module) {
+          return
+        }
+        dispatch = module.context.dispatch
+      }
+      return typeof val === 'function'
+        ? val.apply(this, [dispatch].concat(args))
+        : dispatch.apply(this.$store, [val].concat(args))
+    }
+  })
+  return res
+})
+```
+
+### createNamespacedHelpers
+``` js
+/**
+ * Rebinding namespace param for mapXXX function in special scoped, and return them by simple object
+ * @param {String} namespace
+ * @return {Object}
+ */
+export const createNamespacedHelpers = (namespace) => ({
+  mapState: mapState.bind(null, namespace),
+  mapGetters: mapGetters.bind(null, namespace),
+  mapMutations: mapMutations.bind(null, namespace),
+  mapActions: mapActions.bind(null, namespace)
+})
+```
+
+该方法传入`namespace`，返回包装之后的几个map函数，使得在使用这些map函数时，不必再传入`namespace`。
+
+## 总结
+这几个map函数事实上逻辑都大相径庭，也非常简单，这里便不再做重复的叙述了，具体的可以仔细看看代码。<br />
+至此，vuex的初始化过程和几个重要的函数方法已经全部搞定。剩下还有一些`store`的属性方法建议自行阅读源码，我也会将注释过的代码发布在git上，有意者可移步[vuex](https://github.com/SharminHall/vuex)。
