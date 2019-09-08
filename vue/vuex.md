@@ -305,7 +305,9 @@ _modules.root = {
 ``` js
 installModule(this, state, [], this._modules.root)
 ```
+
 再次回到`Store`的构造函数中，往下执行了`installModule`，顾名思义，初始化module。那么它和上面的`new ModuleCollection()`有什么区别与关系呢？
+
 ``` js
 // ./store.js
 
@@ -561,7 +563,8 @@ function unifyObjectStyle (type, payload, options) {
 }
 ```
 
-看完之后，其实发现代码逻辑非常简单。我便不在此赘述了。整个构造过程的讲解基本完毕，接下来，去看看`map`系列的几个函数。
+看完之后，其实发现代码逻辑非常简单。我便不在此赘述了。值得一提的是`action`的订阅函数，包含两个方法`brfore`和`after`。这可以类比中间件。<br>
+OK，整个构造过程的讲解基本完毕，接下来，去看看`map`系列的几个函数。
 
 ## map函数
 
@@ -771,4 +774,8 @@ export const createNamespacedHelpers = (namespace) => ({
 
 ## 总结
 这几个map函数事实上逻辑都大相径庭，也非常简单，这里便不再做重复的叙述了，具体的可以仔细看看代码。<br />
-至此，vuex的初始化过程和几个重要的函数方法已经全部搞定。剩下还有一些`store`的属性方法建议自行阅读源码，我也会将注释过的代码发布在git上，有意者可移步[vuex](https://github.com/SharminHall/vuex)。
+
+至此，vuex的初始化过程和几个重要的函数方法已经全部搞定。剩下还有一些`store`的属性方法建议自行阅读源码，我也会将注释过的代码发布在git上，有意者可移步[vuex](https://github.com/SharminHall/vuex)。<br>
+
+
+如有不足，或者错误的地方，欢迎指出。共勉。
