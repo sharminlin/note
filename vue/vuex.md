@@ -351,7 +351,7 @@ function installModule (store, rootState, path, module, hot) {
   module.forEachMutation((mutation, key) => {
     const namespacedType = namespace + key
 
-    // mutation = (state, payload) => {}
+    // mutation = (payload) => (state, payload) => {}
     registerMutation(store, namespacedType, mutation, local)
   })
 
@@ -361,7 +361,7 @@ function installModule (store, rootState, path, module, hot) {
     const type = action.root ? key : namespace + key
     const handler = action.handler || action
 
-    // action = ({ dispatch, commit, getters, state, rootGetters. rootState }, payload, cb) => {}
+    // action = (payload, cb) => ({ dispatch, commit, getters, state, rootGetters. rootState }, payload, cb) => {}
     registerAction(store, type, handler, local)
   })
 
@@ -369,7 +369,7 @@ function installModule (store, rootState, path, module, hot) {
   module.forEachGetter((getter, key) => {
     const namespacedType = namespace + key
 
-    // getter = (localState, localGetters, rootState, rootGetters) => {}
+    // getter = (store) => (localState, localGetters, rootState, rootGetters) => {}
     registerGetter(store, namespacedType, getter, local)
   })
 
@@ -383,18 +383,183 @@ function installModule (store, rootState, path, module, hot) {
 
 ```
 
-在`installModule`中，除了知道了各自节点的`state`的初始化，我们也明白了`_mutations`、`_actions`和`_wrappedGetters`的由来与作用。至于其中各自的`register`函数，就不贴在这儿占用空间了。详细的可以对照源码进行阅读。
+在`installModule`中，除了知道了各自节点的`state`的初始化，我们也明白了`_mutations`、`_actions`和`_wrappedGetters`、`_modulesNamespaceMap`的由来与作用。至于其中各自的`register`函数，就不贴在这儿占用空间了。详细的可以对照源码进行阅读。
 
 ### resetStoreVM
+``` js
+function resetStoreVM (store, state, hot) {
+  const oldVm = store._vm
 
-## State
+  // bind store public getters
+  store.getters = {}
+  const wrappedGetters = store._wrappedGetters
+  const computed = {}
+  forEachValue(wrappedGetters, (fn, key) => {
+    // use computed to leverage its lazy-caching mechanism
+    // direct inline function use will lead to closure preserving oldVm.
+    // using partial to return function with only arguments preserved in closure enviroment.
+    computed[key] = partial(fn, store)
+    Object.defineProperty(store.getters, key, {
+      get: () => store._vm[key],
+      enumerable: true // for local getters
+    })
+  })
 
-## Getter
+  // use a Vue instance to store the state tree
+  // suppress warnings just in case the user has added
+  // some funky global mixins
+  const silent = Vue.config.silent
+  Vue.config.silent = true
+  store._vm = new Vue({
+    data: {
+      $$state: state
+    },
+    computed
+  })
+  Vue.config.silent = silent
 
-## Mutation
+  // 严格模式下，监听_vm._data.$$state改变，如果非commit引起，将抛出错误
+  if (store.strict) {
+    enableStrictMode(store)
+  }
 
-## Action
+  // 销毁释放上一个_vm
+  if (oldVm) {
+    if (hot) {
+      // dispatch changes in all subscribed watchers
+      // to force getter re-evaluation for hot reloading.
+      store._withCommit(() => {
+        oldVm._data.$$state = null
+      })
+    }
+    Vue.nextTick(() => oldVm.$destroy())
+  }
+}
+```
 
-## Module
+该方法给`store`新增了一个属性`_vm`指向一个`Vue`实例，包含一个`$$state`数据存储状态树；将上文我们所提到的`_wrappedGetters`存储的getter转化成`computed`。在此同时，设置`store.getter`的getter，取值`_vm.computed`。<br>
+store的构造函数的流程基本完毕，接下来，我们去看看常用的两个方法的实现`commit`、`dispatch`
 
-## Plugin
+## commit
+``` js
+// ./store.js
+
+/*
+ * @param _type {String | Object} commit名
+ * @param _payload {Any}
+ * @param _options 选项
+ */
+commit (_type, _payload, _options) {
+  // check object-style commit
+  const {
+    type,
+    payload,
+    options
+  } = unifyObjectStyle(_type, _payload, _options)
+
+  const mutation = { type, payload }
+  const entry = this._mutations[type]
+  if (!entry) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error(`[vuex] unknown mutation type: ${type}`)
+    }
+    return
+  }
+
+  // 执行handler
+  this._withCommit(() => {
+    entry.forEach(function commitIterator (handler) {
+      handler(payload)
+    })
+  })
+
+  // 触发订阅者
+  this._subscribers.forEach(sub => sub(mutation, this.state))
+
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    options && options.silent
+  ) {
+    console.warn(
+      `[vuex] mutation type: ${type}. Silent option has been removed. ` +
+      'Use the filter functionality in the vue-devtools'
+    )
+  }
+}
+```
+
+在一开始出现了一个陌生方法`unifyObjectStyle`，先看看其实现：
+
+``` js
+function unifyObjectStyle (type, payload, options) {
+  if (isObject(type) && type.type) {
+    options = payload
+    payload = type
+    type = type.type
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    assert(typeof type === 'string', `expects string as the type, but found ${typeof type}.`)
+  }
+
+  return { type, payload, options }
+}
+```
+
+判断`type`是否是`Object`。因此通常我们调用`commit`时，传值`this.$store.commit(type, payload, options)`，同样，也可以使用`this.$store.commit({ type, payload, options })`的方式。<br>
+
+
+
+## dispatch
+``` js
+ dispatch (_type, _payload) {
+  // check object-style dispatch
+  const {
+    type,
+    payload
+  } = unifyObjectStyle(_type, _payload)
+
+  const action = { type, payload }
+  const entry = this._actions[type]
+  if (!entry) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error(`[vuex] unknown action type: ${type}`)
+    }
+    return
+  }
+
+  // 触发订阅者，执行before方法
+  try {
+    this._actionSubscribers
+      .filter(sub => sub.before)
+      .forEach(sub => sub.before(action, this.state))
+  } catch (e) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[vuex] error in before action subscribers: `)
+      console.error(e)
+    }
+  }
+
+  // 多个action发生异步？
+  const result = entry.length > 1
+    ? Promise.all(entry.map(handler => handler(payload)))
+    : entry[0](payload)
+
+  // 执行订阅者after方法
+  return result.then(res => {
+    try {
+      this._actionSubscribers
+        .filter(sub => sub.after)
+        .forEach(sub => sub.after(action, this.state))
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(`[vuex] error in after action subscribers: `)
+        console.error(e)
+      }
+    }
+    return res
+  })
+}
+```
+
+看玩之后，其实发现非常简单。我便不再赘述了。
