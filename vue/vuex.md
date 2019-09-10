@@ -217,7 +217,7 @@ export class Store {
     // 获取根部state状态
     const state = this._modules.root.state
 
-    // 初始化module以及子项module
+    // 初始化module树
     installModule(this, state, [], this._modules.root)
 
     // 设置 store._vm
@@ -316,7 +316,7 @@ installModule(this, state, [], this._modules.root)
  * @param store 上下文
  * @param rootState 根节点state
  * @param path {Array} 由moduleName组成的链式路径数组
- * @param module 当前你层级
+ * @param module 当前节点值
  * @param hot 是否热更新
  */
 function installModule (store, rootState, path, module, hot) {
@@ -563,7 +563,7 @@ function unifyObjectStyle (type, payload, options) {
 }
 ```
 
-看完之后，其实发现代码逻辑非常简单。我便不在此赘述了。值得一提的是`action`的订阅函数，包含两个方法`brfore`和`after`。这可以类比中间件。<br>
+看完之后，其实发现代码逻辑非常简单。我便不在此赘述了。值得一提的是`action`的订阅函数，包含两个方法`brfore`和`after`。这可以类比中间件，但他们非异步。<br>
 OK，整个构造过程的讲解基本完毕，接下来，去看看`map`系列的几个函数。
 
 ## map函数
@@ -605,12 +605,12 @@ function normalizeMap (map) {
 }
 ```
 
-`normalizeNamespace`规范化命名空间`namespace`，同时考虑第一个参数非`string`时的`namespace`的情况下的处理。<br >
+`normalizeNamespace`规范化命名空间`namespace`，同时考虑未传入`namespace`的情况下的处理。<br >
 `normalizeMap`方法通过注释很好理解。其实就是将数组或对象转为`{ key, val }`的形式。
 
 ### mapState
 
-先想象一下是使用`mapState`的几种方式，之后再对照源码进行理解：
+先想象一下使用`mapState`的几种方式，之后再对照源码进行理解：
 
 ``` js
 {
@@ -619,6 +619,7 @@ function normalizeMap (map) {
     ...mapState({
       'name_3': state => state[moduleName]['name_3']
     }),
+    // 存在命名空间
     ...mapState('namespace', {
       'name_4': state => state['name_4']
     })
@@ -693,7 +694,6 @@ export const mapMutations = normalizeNamespace((namespace, mutations) => {
   return res
 })
 ```
-
 
 ### mapGetters
 ``` js
@@ -776,4 +776,4 @@ export const createNamespacedHelpers = (namespace) => ({
 ## 总结
 vuex的源码梳理到此为止。在这过程中会发现许多不曾用到的却很实用的特性。这足以是一个令人兴奋的收获。当然，了解这是如何实现，如何运行的是一开始的目的。其实我也是第一次这样系统去阅读源码，按照从入口到整体的思路。这种思路的好处是不易被代码绕进各种函数方法的调用之中。OK，这篇文章我也会将注释过的代码发布在git上，有意者可移步[vuex](https://github.com/SharminHall/vuex)。<br>
 
-感谢阅读，如有不足，或者错误的地方，请务必指出。共勉。
+如有不足，或者错误的地方，务必指出。感谢，共勉。
