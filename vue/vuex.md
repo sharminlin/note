@@ -137,7 +137,7 @@ export default function (Vue) {
 }
 ```
 
-这是一个公共的mixin方法，做了一个全局的混入。主要就是在组件实例创建之后，将`$store`挂载到组件实例上，因此我们平时在组件内部可以直接使用`this.$store`来访问`store`。那么这其中的`this.options.store`是从哪儿来的呢？我们想想通常时如何加载`vuex`的。如下：
+这是一个公共的mixin方法，做了一个全局的混入。主要就是在组件实例创建之后，将`$store`挂载到组件实例上，因此我们平时在组件内部可以直接使用`this.$store`来访问`store`。那么这其中的`this.options.store`是从哪儿来的呢？我们想想通常是如何加载`vuex`的。如下：
 
 ``` js
 // main.js
@@ -187,7 +187,7 @@ export class Store {
       strict = false
     } = options
 
-    // 声名一大堆私有属性
+    // 声明一大堆私有属性
     this._committing = false
     this._actions = Object.create(null)
     this._actionSubscribers = []
