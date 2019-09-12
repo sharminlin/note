@@ -60,7 +60,7 @@ function install (Vue, options) {
 }
 ```
 
-基于此，我们先看看在`vuex`的入口文件中，返回了什么。
+基于此，我们先看看在`vuex`的入口文件。
 
 ``` js
 // ./index.js
@@ -98,7 +98,7 @@ export function install (_Vue) {
 }
 ```
 
-该函数接收了`Vue`的构造器命名为`_Vue`，并且保留起来进行注册重复之校验，再执行`applyMixin(Vue)`。那么`applyMixin`又干了什么。
+该函数接收了`Vue`的构造器命名为`_Vue`，并且保留起来进行注册重复校验，再执行`applyMixin(Vue)`。下面是applyMixin的实现：
 
 ``` js
 // ./mixin.js
@@ -137,7 +137,7 @@ export default function (Vue) {
 }
 ```
 
-这是一个公共的mixin方法，做了一个全局的混入。主要就是在组件实例创建之后，将`$store`挂载到组件实例上，因此我们平时在组件内部可以直接使用`this.$store`来访问`store`。那么这其中的`this.options.store`是从哪儿来的呢？我们想想通常时如何加载`vuex`的。如下：
+这是一个公共的mixin方法，做了一个全局的混入。主要就是在组件实例创建之后，将`$store`挂载到组件实例上，因此我们平时在组件内部可以直接使用`this.$store`来访问`store`。那么这其中的`this.options.store`是从哪儿来的呢？我们想想通常是如何加载`vuex`的。如下：
 
 ``` js
 // main.js
@@ -187,7 +187,7 @@ export class Store {
       strict = false
     } = options
 
-    // 声名一大堆私有属性
+    // 声明一大堆私有属性
     this._committing = false
     this._actions = Object.create(null)
     this._actionSubscribers = []
@@ -771,11 +771,9 @@ export const createNamespacedHelpers = (namespace) => ({
 ```
 
 该方法传入`namespace`，返回包装之后的几个map函数，使得在使用这些map函数时，不必再传入`namespace`。
-
-## 总结
 这几个map函数事实上逻辑都大相径庭，也非常简单，这里便不再做重复的叙述了，具体的可以仔细看看代码。<br />
 
-至此，vuex的初始化过程和几个重要的函数方法已经全部搞定。剩下还有一些`store`的属性方法建议自行阅读源码，我也会将注释过的代码发布在git上，有意者可移步[vuex](https://github.com/SharminHall/vuex)。<br>
-
+## 总结
+vuex的源码梳理到此为止。在这过程中会发现许多不曾用到的却很实用的特性。这足以是一个令人兴奋的收获。当然，了解这是如何实现，如何运行的是一开始的目的。其实我也是第一次这样系统去阅读源码，按照从入口到整体的思路。这种思路的好处是不易被代码绕进各种函数方法的调用之中。OK，之后我也会将注释过的代码（其实没怎么注释0.0）发布在git上，有意者可移步[vuex](https://github.com/SharminHall/vuex)。<br>
 
 如有不足，或者错误的地方，务必指出。感谢，共勉。
