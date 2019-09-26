@@ -90,6 +90,8 @@ export function install (Vue) {
 ## router.init
 
 ``` js
+// ./index.js
+
 init (app: any /* Vue component instance */) {
   process.env.NODE_ENV !== 'production' && assert(
     install.installed,
@@ -144,3 +146,4 @@ init (app: any /* Vue component instance */) {
 }
 ```
 
+该函数将注入`router`的组件（app），存储再`apps`属性中
