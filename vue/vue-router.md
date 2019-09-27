@@ -225,7 +225,7 @@ constructor (options: RouterOptions = {}) {
 
 下面我们继续深入，看看`createMatcher`的实现
 
-### createMatcher
+#### createMatcher
 ``` js
 // ./create-matcher.js
 export type Matcher = {
@@ -293,6 +293,7 @@ export function createMatcher (
 对于`addRoutes`我们应该非常熟悉，这是动态更新路由的api，它的实现是基于`createRouteMap`方法，该方法主要是将raw route整合返回三个参数，这三个参数的解释在注释中已经非常详尽。因此这里我们先理解`match`再去看`createRouteMap`的具体实现。<br />
 
 ``` js
+// 通过raw location抓取目标路由节点信息
 function match (
   raw: RawLocation,
   currentRoute?: Route,
@@ -371,7 +372,7 @@ return {
 }
 ```
 
-除了`normalizeLocation`之外，其他都是一些简单的逻辑，我尽量详细的写在了注释中。但是可以发现，其中有一个函数方法频繁出现，即`_createRoute`：
+除了`normalizeLocation`之外，其他都是一些简单的逻辑，我尽量详细的写在了注释中。但是可以发现，其中有一个函数方法频繁出现，即`_createRoute`，`match`方法正是返回的该方法执行之后的结果：
 
 ``` js
 function _createRoute (
@@ -393,9 +394,48 @@ function _createRoute (
 1. 该路由是否设置了重定向`redirect`，从而去获取重定向之后的路由信息
 2. 该路由是否设置别名的路由的子路由，从而使用别名去获取路由信息
 
-这里对于`redirect`和`alias`就不做详细的阐述了，我们还是着重的看看`createRoute`的具体实现：
+这里对于`redirect`和`alias`就不做详细的阐述了，我们还先着重的看看`createRoute`的具体实现：
 
 ``` js
+// ./util/route.js
+
+export function createRoute (
+  record: ?RouteRecord,
+  location: Location,
+  redirectedFrom?: ?Location,
+  router?: VueRouter
+): Route {
+  // location.query路由参数附加在path中的处理函数，未设置则会调用默认处理函数
+  const stringifyQuery = router && router.options.stringifyQuery
+
+  let query: any = location.query || {}
+  try {
+    query = clone(query)
+  } catch (e) {}
+
+  const route: Route = {
+    name: location.name || (record && record.name),
+    meta: (record && record.meta) || {},
+    path: location.path || '/',
+    hash: location.hash || '',
+    query,
+    params: location.params || {},
+    fullPath: getFullPath(location, stringifyQuery),
+    matched: record ? formatMatch(record) : [] // 存储当前路由节点到顶层的路由栈
+  }
+  if (redirectedFrom) {
+    route.redirectedFrom = getFullPath(redirectedFrom, stringifyQuery)
+  }
+  return Object.freeze(route)
+}
+```
+
+这是创建路由节点的，这些属性相信都是非常熟悉的了，值得一提的是`matched`属性，这会在跳转路由时用到。<br />
+接下来，我们来看看是处理存储route tree的函数`createRouteMap`:
+
+#### createRouteMap
+``` js
+// ./create-router-map.js
 export function createRouteMap (
   routes: Array<RouteConfig>,
   oldPathList?: Array<string>,
@@ -507,7 +547,7 @@ function addRouteRecord (
     pathMap[record.path] = record // pathMap 根据路径映射对应路由信息的map对象
   }
 
-  // 如果该路由具备别名，将以别名映射该路由pathMap
+  // 如果该路由具备别名，则其子路由的将以该别名生成一条分支树
   if (route.alias !== undefined) {
     const aliases = Array.isArray(route.alias) ? route.alias : [route.alias]
     for (let i = 0; i < aliases.length; ++i) {
@@ -544,7 +584,7 @@ function addRouteRecord (
 }
 ```
 
-该方法即整合raw route的实际方法，将生成一个新的route tree，节点类型为`RouteRecord`，类型定义如下：
+该方法为整合raw route的实际方法，将生成一个新的route tree，节点类型为`RouteRecord`，类型定义如下：
 
 ``` ts
 export interface RouteRecord {
@@ -569,4 +609,14 @@ export interface RouteRecord {
     | Dictionary<boolean | Object | RoutePropsFunction>
 }
 ```
+
+### 小结
+到此为止，我们就将`VueRouter`中的`this.matcher = createMatcher(options.routes || [], this)`该执行语句的过程理了一遍。`matcher`包含两个函数方法`match`和`addRoutes`。<br />
+
+`match`用于通过raw location获取目标路由信息。在实现过程中，处理了`new VueRouter()`时传入的raw routes，生成3个参数用于存储处理过的`RouteRecord`类型的节点，`pathList`、`pathMap`和`nameMap`。<br />
+`addRoutes`为动态路由的实现api，该方法会改变上面的3个存储参数。
+
+### History
+现在，我们切换视角，看看路由api的实现。<br />
+在上面提到过，`vue-router`有3种路由模式，`hash（哈希） | history（H5 api） | abstract（非浏览器）`，
 
