@@ -153,7 +153,7 @@ init (app: any /* Vue component instance */) {
 `this.app`存储的是当前注册组件，一个组件树下，会取最底层的一个注入过`router`的组件。<br />
 然后调用`transitionTo`初次加载路由组件，该函数在`history class`之中，我们之后会讲到。最后注册`history`的路由更新回调函数。
 
-### new VueRouter()
+### 2.2 new VueRouter()
 ``` js
 import Router from 'vue-router'
 
@@ -179,7 +179,7 @@ export default new Router({
 
 如上，我们通常在使用`vue-router`的时候会传入`mode`、`base`和`routes`三个参数，接下来看看`new Router()`发生了什么。
 
-### 2.2 Constructor
+### 2.2.1 Constructor
 
 ``` js
 // ./index.js
@@ -229,7 +229,7 @@ constructor (options: RouterOptions = {}) {
 
 下面我们继续深入，看看`createMatcher`的实现：
 
-#### 2.2.1 createMatcher
+#### 2.2.2 createMatcher
 ``` js
 // ./create-matcher.js
 export type Matcher = {
@@ -294,7 +294,7 @@ export function createMatcher (
 ```
 
 在最开始，声名了一个类型`Matcher`，而该类型正是`createMatcher`返回值类型，包含两个函数方法`match`和`addRoutes`。<br />
-对于`addRoutes`我们应该非常熟悉，这是动态更新路由的api，它的实现是基于`createRouteMap`方法，该方法主要是将raw routes整合返回三个参数，这三个参数的解释在注释中已经非常详尽。因此这里我们先理解`match`再去看`createRouteMap`的具体实现。<br />
+对于`addRoutes`我们应该非常熟悉，这是动态更新路由的api，它的实现是基于`createRouteMap`方法，该方法主要是将raw routes整合返回三个参数，这三个参数的解释在注释中已经非常详尽。因此这里我们先理解`match`整体流程，再去看`createRouteMap`的具体实现。<br />
 
 ``` js
 // 通过raw location抓取目标路由节点信息
@@ -434,10 +434,10 @@ export function createRoute (
 }
 ```
 
-这是创建路由节点的，这些属性相信都是非常熟悉，值得一提的是`matched`属性，这会在跳转路由时用到。<br />
+这是创建路由节点的方法，这些属性相信都是非常熟悉，值得一提的是`matched`属性，这会在跳转路由时用到。<br />
 接下来，我们来看看是处理存储route tree的函数`createRouteMap`:
 
-#### 2.2.2 createRouteMap
+#### 2.2.3 createRouteMap
 
 先回顾一下，该方法返回3个变量`pathList, pathMap, nameMap`，并且动态路由api`addRoutes`也会使用该方法
 
@@ -717,7 +717,7 @@ transitionTo (
 }
 ```
 
-该方法在获取到目标路由之后，再次调用了方法`confirmTransition`，如果成功，则更新路由信息，改变url，执行成功回调；如果失败，则抛出错误，执行失败回调。
+该方法在获取到目标路由之后，再次调用了方法`confirmTransition`，如果成功，则更新路由信息，重渲染视图，改变url，执行成功回调；如果失败，则抛出错误，执行失败回调。
 
 #### 3.2.1 confirmTransition
 ``` js
@@ -1351,9 +1351,10 @@ export default {
 }
 ```
 
-该组件同样使用渲染函数，不同于`RouterView`的是该组件非函数式，它接受两个props`to`和`tag`。
+该组件同样使用渲染函数，不同于`RouterView`的是该组件非函数式，它接受两个props`to`和`tag`。将元素的点击事件绑定在`tag`上。
 
 ## 总结
-至此，`vue-router`源码阅读完毕。限于篇幅，其中还有许多工具函数以及部分逻辑代码或省略，或一笔带过。毕竟这也不是一篇扫盲式的文章的说，虽然我觉得自己已经极尽详细地了。如果你有兴趣的话，我已经将注释过的代码上传至git，你可以clone下来详细阅读：[vue-router](https://github.com/SharminHall/vue-router) (注：微信对外链貌似有限制，建议使用电脑端)。<br />
+至此，`vue-router`源码阅读完毕。<br />
+虽然看似长篇大论，但整个代码逻辑并不难。限于篇幅，其中还有许多工具函数以及部分逻辑代码或省略，或一笔带过。毕竟这也不是一篇扫盲式的文章的说，虽然我觉得自己已经极尽详细地了。如果你有兴趣的话，我已经将注释过的代码上传至git，你可以clone下来详细阅读：[vue-router](https://github.com/SharminHall/vue-router) (注：微信对外链貌似有限制，建议使用电脑端)。<br />
 
-在阅读过程中，事实上在涉及到关于vue底层的一些原理时，我也不甚了解，仅知道个大概。路漫漫其修远兮。如有不足，或者错误之处，还望指正，不甚感激，共勉。
+在阅读过程中，事实上在涉及到关于vue底层的一些原理时，我也不甚了解。路漫漫其修远兮。如有不足，或者错误之处，还望指正，不甚感激，共勉。
