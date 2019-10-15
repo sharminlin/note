@@ -1,5 +1,10 @@
 # vue3.0 响应式原理
 
+10月5号，尤雨溪大神公布了vue3.0的[源码](https://github.com/vuejs/vue-next)，版本pre-alpha。git库地址：https://github.com/vuejs/vue-next
+
+我之后也花时间去看了看代码。
+
+
 ``` js
 let targetMap = new WeakMap()
 let activeReactiveEffectStack = []
@@ -14,7 +19,7 @@ function reactive (target, options) {
   
     set: function (target, key, value, receiver) {
       console.log('set ', key, ' ', value)
-      const result =  Reflect.set(target, key, value, receiver)
+      const result = Reflect.set(target, key, value, receiver)
       trigger(target, key)
       return result
     }
@@ -101,7 +106,7 @@ function cleanup (effect) {
     for(let i = 0; i < deps.length; i++) {
       deps[i].delete(effect)
     }
-    deps.length = 0  
+    deps.length = 0
   }
 }
 
