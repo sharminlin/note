@@ -6,7 +6,7 @@
 
 此处不意欲逐行解读源码，盖因业界大牛早已纷纷激扬代码，挥斥方遒，洋洋洒洒，佳篇无数。我虽紧随其后，奈何功力浅薄，徒叹唏嘘。
 
-我提取了响应式几个关键方法，合并成一个简易的响应式实现过程：
+我提取了响应式几个关键方法，合并成一个**简易**的响应式实现过程：
 
 ``` js
 // 存储target的属性对应的依赖回调
@@ -60,6 +60,7 @@ function effect (fn, options) {
   // 存储的是某监听对象的属性映射的effects
   effect.deps = []
 
+  // 这里会手动执行一次，收集依赖。源码会有个lazy选项，避免第一次执行
   effect()
 
   return effect
@@ -103,6 +104,7 @@ function trigger (target, key) {
       effects.add(effect)
     })
 
+    // 源码分成了普通effect和computed，这里就不区别了。
     effects.forEach(effect => {
       effect()
     })
@@ -134,7 +136,7 @@ test()
 
 ```
 
-计算属性`computed`的实现也是依托于该流程。还是建议去看源码，了解更多细节。
+计算属性`computed`的实现亦基于此。还是建议去看源码，了解更多细节。
 
 皮毛之见。
 
