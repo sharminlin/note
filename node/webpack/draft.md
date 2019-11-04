@@ -5,6 +5,9 @@
 - entry
 - output
 - loader
+  - style-loader/css-loader/postcss-loader/sass-loader/less-loader
+  - file-loader/url-loader
+  - babel-loader
 - plugin
   - html-webpack-plugin
   - HotModuleReplacementPlugin
@@ -28,7 +31,6 @@
 1. 注入plugin配置项
 2. 注册plugin，每一个plugin会订阅涉及到的事件回调
 3. 运行中，依次执行回调
-
 
 ``` js
 // 一个标准JavaScript类函数
@@ -55,3 +57,7 @@ class MyPluginDemo {
     }
 }
 ```
+
+## loader
+
+
