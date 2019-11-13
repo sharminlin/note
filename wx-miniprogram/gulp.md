@@ -21,12 +21,15 @@ const argv = require('minimist')(process.argv.slice(2))
 
 const jsonminify = require('gulp-jsonminify')
 const gulpSass = require('gulp-sass')
+const gulpUglify = require('gulp-uglify-es').default
+const cleanCSS = require('gulp-clean-css')
 const combiner = require('stream-combiner2')
 const preprocess = require('gulp-preprocess')
 
 const src = './src'
 const dist = './dist'
 const isProd = argv.type === 'prod'
+const format = isProd ? false : 'beautify'
 
 const paths = {
   json: `${src}/**/*.json`,
@@ -81,7 +84,7 @@ const handleError = (err) => {
  */
 function watch () {
   ;
-  ['wxml', 'wxss', 'js', 'json', 'sass', 'images'].forEach((v) => {
+  ['wxml', 'wxss', 'js', 'json', 'sass', 'images', 'wxs'].forEach((v) => {
     gulp.watch(paths[v], eval(v))
   })
 }
@@ -101,11 +104,6 @@ function wxml () {
     .pipe(gulp.dest(dist))
 }
 
-function wxs () {
-  return gulp.src(paths.wxs)
-    .pipe(gulp.dest(dist))
-}
-
 function images () {
   return gulp.src(paths.images).pipe(gulp.dest(`${dist}/images`))
 }
@@ -117,6 +115,11 @@ function js () {
         NODE_ENV: argv.type || 'dev'
       }
     }))
+    .pipe(gulpUglify({
+      output: {
+        beautify: isProd ? false: true
+      }
+    }))
     .pipe(gulp.dest(dist))
 }
 
@@ -125,10 +128,16 @@ function wxss () {
     .pipe(gulp.dest(dist))
 }
 
+function wxs () {
+  return gulp.src(paths.wxs)
+    .pipe(gulp.dest(dist))
+}
+
 function sass () {
   const combined = combiner.obj([
     gulp.src(paths.sass),
-    gulpSass({outputStyle: 'expanded'}).on('error', gulpSass.logError),
+    gulpSass({ errLogToConsole: true, outputStyle: 'expanded' }).on('error', gulpSass.logError),
+    cleanCSS({ format }),
     rename((path) => (path.extname = '.wxss')),
     gulp.dest(dist)
   ])
@@ -136,6 +145,7 @@ function sass () {
   combined.on('error', handleError)
   return combined
 }
+
 
 ```
 
@@ -161,7 +171,7 @@ module.exports = {
 
 ### package.json
 
-``` JS
+``` JSon
 {
   "name": "",
   "version": "1.2.0",
@@ -179,10 +189,12 @@ module.exports = {
     "del": "^4.0.0",
     "fancy-log": "^1.3.3",
     "gulp": "^4.0.0",
+    "gulp-clean-css": "^4.2.0",
     "gulp-jsonminify": "^1.1.0",
     "gulp-preprocess": "^3.0.2",
     "gulp-rename": "^1.4.0",
     "gulp-sass": "^4.0.2",
+    "gulp-uglify-es": "^2.0.0",
     "minimist": "^1.2.0",
     "stream-combiner2": "^1.1.1",
     "through2": "^3.0.1"
