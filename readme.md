@@ -25,6 +25,6 @@
 - [View UI](https://www.iviewui.com/docs/introduce)
 - [Antd Design for Vue](https://www.antdv.com/docs/vue/introduce/)
 
-## Docs for miniprogram
+## Docs for Miniprogram
 
 - [微信小程序官方文档](https://developers.weixin.qq.com/miniprogram/dev/framework/)
