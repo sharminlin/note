@@ -6,6 +6,13 @@
 
 收集一些重要的文档资料或者优秀有用的文章，便于翻查
 
+## Docs for Base
+
+- [阮一峰ES6 入门教程](http://es6.ruanyifeng.com/)
+- [TS官方文档](http://www.typescriptlang.org/docs/home.html)
+- [TS入门教程](https://ts.xcatliu.com/)
+- [TS中文手册](https://typescript.bootcss.com/)
+
 ## Docs for React
 
 - [react官网](https://reactjs.org/)
