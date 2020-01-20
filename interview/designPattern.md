@@ -1,4 +1,5 @@
 # Design Pattern (draft)
+单一职责原则
 
 ## 闭包与高阶函数
 ### currying
@@ -127,10 +128,109 @@ Singleton.prototype.getInstance = (function () {
 })()
 ```
 
-透明的单列模式：
+透明的单列模式，使用闭包封装内部实例，返回构造函数：
 
 ``` js
-function Singleton (name) {
-  
+let Singleton = (function () {
+  let instance = null
+  let Singleton = function (name) {
+    if (instance) {
+      return instance
+    }
+    this.name = name
+
+    return instance = this
+  }
+
+  Singleton.prototype.getName = function () {
+    console.log(this.name)
+  }
+
+  return Singleton
+})()
+
+```
+
+拆分单例：
+
+``` js
+function Person (name) {
+  this.name = name
+}
+Person.prototype.getName = function () {
+  console.log(this.name)
+}
+
+let ProxyPerson = (function () {
+  let instance = null
+
+  return function (name) {
+    if (!instance) {
+      return new Person(name)
+    }
+    return instance
+  }
+})()
+
+```
+
+## 策略
+
+一个策略对象（算法类），一个执行对象（启动响应算法者）
+
+消灭if-else-if
+
+## 代理
+虚拟
+```js
+let myImg = (function () {
+  let img = document.createElement('img')
+  document.appendChild(img)
+  return {
+    setSrc (src) {
+      img.src = src
+    }
+  }
+})
+
+let proxyImg = (function () {
+  let img = new Image()
+  img.onLoad = function () {
+    myImg.setSrc(this.src)
+  }
+  return {
+    setSrc (src) {
+      myImg.setSrc('loading')
+      img.setSrc(src)
+    }
+  }
+})
+
+```
+
+代理与接口的一致性原则（这让我想起了适配器）
+
+## 迭代器
+``` js
+let each = function (arr, callback) {
+  for (var i = 0, len = arr.length; i < len; i++) {
+    callback.call(arr[i], i, arr[i])
+  }
+}
+
+let Iterator = function (arr) {
+  let current = 0
+  return {
+    isDone: current >= arr.length,
+    next: function () {
+      current++
+    },
+    value: arr[current]
+  }
 }
 ```
+
+## 发布-订阅（观察者）
+Event
+
+## 命令模式
