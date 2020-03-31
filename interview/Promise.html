@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    /*
+      每一个resolve\reject都是为了触发下一个then收集队列
+    */
+    //Promise/A+规范的三种状态
+    const PENDING = 'pending'
+    const FULFILLED = 'fulfilled'
+    const REJECTED = 'rejected'
+
+    class _Promise {
+      constructor (func) {
+        this._status = PENDING
+        this.resolveQueue = [] // resolve队列
+        this.rejectQueue = [] // reject队列
+
+        const _resolve = (res) => {
+          const run = () => {
+            if (this._status !== PENDING) return
+            this._status = FULFILLED
+            this._value = res
+            while (this.resolveQueue.length) {
+              const nextResolve = this.resolveQueue.shift()
+              nextResolve(res)
+            }
+          }
+          setTimeout(run)
+        }
+
+        const _reject = (res) => {
+          const run = () => {
+            if (this._status !== PENDING) return
+            this._status = REJECTED
+            this._value = res
+            while (this.rejectQueue.length) {
+              const nextReject = this.rejectQueue.shift()
+              nextReject(res)
+            }
+          }
+          setTimeout(run)
+        }
+
+        // 执行
+        func && func(_resolve, _reject)
+      }
+
+      then (successFun, errFun) {
+        typeof successFun !== 'function' ? successFun = value => value : null
+        typeof errFun !== 'function' ? errFun = reason => {
+          throw new Error(reason instanceof Error ? reason.message : reason);
+        } : null
+
+        // 返回一个新的promise
+        return new _Promise((resolve, reject) => {
+          const fulfilledFn = value => {
+            try {
+              let x = successFun(value)
+              x instanceof _Promise ? x.then(resolve, reject) : resolve(x)
+            } catch (error) {
+              reject(error)
+            }
+          }
+
+          const rejectedFn = error => {
+            try {
+              let x = errFun(error)
+              x instanceof _Promise ? x.then(resolve, reject) : resolve(x)
+            } catch (error) {
+              reject(error)
+            }
+          }
+
+          switch (this._status) {
+            case PENDING:
+              this.resolveQueue.push(fulfilledFn)
+              this.rejectQueue.push(rejectedFn)
+              break;
+            case FULFILLED:
+              fulfilledFn(this._value)
+              break;
+            case REJECTED:
+              rejectedFn(this._value)
+              break
+          }
+        })
+      }
+
+      catch (rejectFn) {
+        return this.then(undefined, rejectFn)
+      }
+
+      finally (callback) {
+        return this.then(
+          value => _Promise.resolve(callback()).then(() => value),
+          reason => _Promise.resolve(callback()).then(() => { throw reason })
+        )
+      }
+
+      static resolve (value) {
+        if (value instanceof _Promise) return value
+        return new _Promise((resolve, reject) => resolve(value))
+      }
+
+      static reject (value) {
+        return new _Promise((resolve, reject) => reject(value))
+      }
+
+      static all (promiseList) {
+        let finishCount = 0 // 已完成的p的数量，当数量为promiseList的长度时，表示所有p都顺利完成了
+        let result = [] // 收集每一个presolve的值
+        return new _Promise((resolve, reject) => {
+          promiseList.map((p, index) => {
+            // 给每一个p加入后续then收集队列，当所有p都完成后，触发resolve
+            _Promise.resolve(p).then(res => {
+              result[index] = res
+              if (++finishCount === promiseList.length - 1) {
+                resolve(result)
+              }
+            }, err => {
+              reject(err)
+            })
+          })
+        })
+      }
+
+      static race (promiseList) {
+        return new _Promise((resolve, reject) => {
+          promiseList.map((p, index) => {
+            _Promise.resolve(p).then(res => {
+              // 只要一个成功，就resolve
+              resolve(res)
+            }, error => {
+              // 只要一个失败，就reject
+              reject(err)
+            })
+          })
+        })
+      }
+    }
+
+    const p1 = new _Promise((resolve, reject) => {
+      resolve(1)
+    })
+
+    p1.then(res => {
+      console.log(res)
+      //then回调中可以return一个Promise
+      return new _Promise(resolve => {
+        setTimeout(() => {
+          resolve(2)
+        },1000)
+      })
+    }, err => {
+      console.log(err)
+    }).then(res => {
+      console.log(res)
+      //then回调中也可以return一个值
+      return 3
+    }).then(res => {
+      console.log(res)
+    })
+
+    const p2 = new _Promise((resolve, reject) => {
+      setTimeout(() => {
+        console.log('p2-1')
+        resolve('p2')
+      })
+    })
+    
+    _Promise.all([p1, p2]).then(res => {
+      console.log(res)
+    })
+  </script>
+</body>
+</html>
