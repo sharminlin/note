@@ -191,6 +191,72 @@ Function.prototype.myBind = function (context, ...args) {
 }
 ```
 
+### new
+手动实现一个new
+``` js
+function _new(F, ...args) {
+  const target = Object.create({})
+  target.__proto__ = F.prototype
+  const result = F.call(target, ...args)
+  if (result && (typeof result === 'object' || typeof result === 'function')) return result
+  return target
+}
+```
+
+### deepClone 深拷贝实现
+``` js
+function deepClone (target, hash = new WeakMap()) {
+  if (target instanceof RegExp) return new RegExp(target)
+  if (target instanceof Date) return new Date(target)
+  // 普通类型
+  if (target === null || typeof target !== 'object') return target
+  // 防止嵌套引用
+  if (hash.has(target)) return hash.get(target)
+  let t = new target.constructor()
+  hash.set(target, t)
+  // 循环递归赋值
+  for (let key in target) {
+    if (target.hasOwnProperty(key)) {
+      t[key] = deepClone(target[key], hash)
+    }
+  }
+  return t
+}
+```
+
+### curry柯里化
+``` js
+function curry (fn, ...args) {
+  // 边界判断
+  args.length < fn.length
+    // 返回一个函数，重新柯里化，同时带上上次的参数值
+    ? (...nextArgs) => curry(fn, ...args, ...nextArgs)
+    : fn(...args)
+}
+```
+
+### es5实现继承
+``` js
+function Person (name) {
+  this.name = name
+}
+Person.prototype.sayHello = function () {
+  console.log(this.name)
+}
+
+function Joe () {
+  Person.call('Joe')
+}
+Joe.prototype = Object.create(Person.prototype, {
+  constructor: {
+    value: Joe,
+    enumerable: false,
+    writable: true,
+    configurable: true
+  }
+})
+```
+
 ### 内存泄露
 
 #### The reason
