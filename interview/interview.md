@@ -257,6 +257,46 @@ Joe.prototype = Object.create(Person.prototype, {
 })
 ```
 
+### debounce
+``` js
+function debounce (fn, delay) {
+  let timer = null
+  let context = this
+  return function (...args) {
+    timer && clearTimeout(timer)
+    timer = setTimeout(() => {
+      fn.apply(context, args)
+    })
+  }
+}
+```
+
+### throttle
+``` js
+function throttle (fn, delay) {
+  let last = 0
+  let context = this
+  return function (...args) {
+    let now = new Date().getTime()
+    if (now - last >= delay) {
+      last = now
+      fn.apply(context, args)
+    }
+  }
+} 
+```
+
+### flattenDeep
+``` js
+function flattenDeep (arr) {
+  return arr.reduce((pre, cur) => {
+    return Array.isArray(cur) ? pre.concat(flattenDeep(cur)) : pre.concat(cur)
+  }, [])
+}
+// 简化一下
+const flattenDeep = (arr) => arr.reduce((pre, cur) => pre.concat(Array.isArray(cur) ? flattenDeep(cur) : cur), [])
+```
+
 ### 内存泄露
 
 #### The reason
