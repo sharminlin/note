@@ -35,3 +35,9 @@
 ## Docs for Miniprogram
 
 - [微信小程序官方文档](https://developers.weixin.qq.com/miniprogram/dev/framework/)
+
+## Docs for Webpack
+
+- [webpack官方文档](https://webpack.docschina.org/concepts/)
+- [webpack4-用之初体验，一起敲它十一遍](https://juejin.im/post/5adea0106fb9a07a9d6ff6de)
+- [webpack4-react开发环境最佳实践](https://juejin.im/post/5cfe4b13f265da1bb13f26a8)
