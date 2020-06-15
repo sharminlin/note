@@ -379,3 +379,6 @@ const Counter = new Vue({
 我们具体看子组件加载->更新->卸载时的过程：
 
 ![指令与组件生命周期的流程关系](http://sharminh.top/images/md-directive&lifecycle.png)
+
+以上。
+
