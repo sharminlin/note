@@ -80,7 +80,7 @@ export const ASSET_TYPES = [
 ]
 ```
 
-若注册指令，传入的是一个函数，则该函数默认为`bind`和`update`的钩子函数。之后将指令挂载在`options.directives`上。同理全局组件与过滤器相应都挂载在`options.components`与`options.filters`上。该`options`的相应值将在运行编译时，注入所有组件中。
+若注册指令，传入的是一个函数，则该函数默认为`bind`和`update`的钩子函数。之后将指令挂载在`Vue.options.directives`上。同理全局组件与过滤器相应都挂载在`Vue.options.components`与`Vue.options.filters`上。
 
 ``` js
 // core/global-api/assets.js
