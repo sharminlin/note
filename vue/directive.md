@@ -64,6 +64,9 @@ new Vue({
 ```
 
 ## 从源码看指令注册流程
+
+1. 全局注册
+
 全局有一个`directive`的方法，这个方法如何实现的呢？
 
 首先得找到`initAssetRegisters`方法，该函数注册全局的一些方法，包括：
@@ -114,6 +117,69 @@ export function initAssetRegisters (Vue: GlobalAPI) {
     }
   })
 }
+```
+
+2. 局部注册以及合并全局选项
+
+在组件实例生成时，将会对组件进行选项操作。我们调用`new Vue(options)`，其实调用的是`Vue.prototype._init(options)`。
+
+``` js
+//core/instance/init.js
+// ... 部分代码已省略
+import { extend, mergeOptions, formatComponentName } from '../util/index'
+
+...
+export function initMixin (Vue: Class<Component>) {
+  Vue.prototype._init = function (options?: Object) {
+    const vm: Component = this
+    // ...
+    // merge options
+    if (options && options._isComponent) {
+      // optimize internal component instantiation
+      // since dynamic options merging is pretty slow, and none of the
+      // internal component options needs special treatment.
+      initInternalComponent(vm, options)
+    } else {
+      // 该方法将合并选项的同时，规则化组件选项，包括normalizeDirectives
+      vm.$options = mergeOptions(
+        // 此处vm为Vue的实例，其constructor指向Vue
+        resolveConstructorOptions(vm.constructor),
+        options || {},
+        vm
+      )
+    }
+    // ...
+  }
+}
+
+// ...
+
+export function resolveConstructorOptions (Ctor: Class<Component>) {
+  // 该options即全局注册时注入的全局对象，将合并入组件中
+  // 即包括我们之前提到的全局注册的directives
+  let options = Ctor.options
+  if (Ctor.super) {
+    const superOptions = resolveConstructorOptions(Ctor.super)
+    const cachedSuperOptions = Ctor.superOptions
+    if (superOptions !== cachedSuperOptions) {
+      // super option changed,
+      // need to resolve new options.
+      Ctor.superOptions = superOptions
+      // check if there are any late-modified/attached options (#4976)
+      const modifiedOptions = resolveModifiedOptions(Ctor)
+      // update base extend options
+      if (modifiedOptions) {
+        extend(Ctor.extendOptions, modifiedOptions)
+      }
+      options = Ctor.options = mergeOptions(superOptions, Ctor.extendOptions)
+      if (options.name) {
+        options.components[options.name] = Ctor
+      }
+    }
+  }
+  return options
+}
+// ...
 ```
 
 ## 从源码的角度看指令的执行周期
@@ -242,7 +308,7 @@ const Counter = new Vue({
     count: 1
   },
   created() {
-    console.log("组件 create");
+    console.log("组件 created");
   },
   beforeMount() {
     console.log("组件 beforeMount");
@@ -312,23 +378,4 @@ const Counter = new Vue({
 
 我们具体看子组件加载->更新->卸载时的过程：
 
-``` js
-// 组件加载时
-组件 create 
-组件 beforeMount 
-demo bind
-demo inserted 
-组件 mounted 
-
-// 更新
-组件 beforeUpdate 
-demo update
-demo componentUpdated
-组件 updated 
-
-// 卸载
-组件 beforeDestroy 
-demo unbind 
-```
-
-完毕！如有错误，请及时提出，谢谢。
+![指令与组件生命周期的流程关系](http://sharminh.top/images/md-directive&lifecycle.png)
