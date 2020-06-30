@@ -28,7 +28,7 @@
 
 ## 注册指令的两种方法
 
-1. 全局注册
+### 全局注册
 ``` js
 Vue.directive('myDir', {
   bind (el) {
@@ -49,7 +49,7 @@ Vue.directive('myDir', {
 })
 ```
 
-2. 局部注册
+### 局部注册
 
 组件支持`directives`选项用于注册本组件指令
 
@@ -65,7 +65,7 @@ new Vue({
 
 ## 从源码看指令注册流程
 
-1. 全局注册
+### 全局注册
 
 全局有一个`directive`的方法，这个方法如何实现的呢？
 
@@ -119,7 +119,7 @@ export function initAssetRegisters (Vue: GlobalAPI) {
 }
 ```
 
-2. 局部注册以及合并全局选项
+### 局部注册以及合并全局选项
 
 在组件实例生成时，将会对组件进行选项操作。我们调用`new Vue(options)`，其实调用的是`Vue.prototype._init(options)`。
 
