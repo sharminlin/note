@@ -231,7 +231,7 @@ export class Observer {
 
 > 性能代价和获得的用户体验收益不成正比。
 
-那么接下来再来回顾看看vue是如何定义数组的部分方法以达到数据响应的：
+那么接下来再来回顾看看vue是如何定义数组方法以达到数据响应的：
 
 ``` js
 // core/observer/index
@@ -282,6 +282,7 @@ methodsToPatch.forEach(function (method) {
   // cache original method
   // 保留原生的数组方法
   const original = arrayProto[method]
+  // 覆盖
   def(arrayMethods, method, function mutator (...args) {
     // 更新数据
     const result = original.apply(this, args)
@@ -305,9 +306,76 @@ methodsToPatch.forEach(function (method) {
 })
 ```
 
+这里迭代`methodsToPatch`，将需要更改的数组方法在不污染原生方法的情况下显示挂载在`arrayMethods`上，达到视图更新的目的。同时收集可能新增的数组元素`observe`化。
+
 ``` js
 // core/observer/index
 const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
 ```
 
-`arrayMethods`通过`Object.create(arrayProto)`创建，因此可以在不污染原生方法的情况下修改对应的数组方法。`arrayKeys`获取的则是被显示添加到`arrayMethods`上可被枚举的属性，即`methodsToPatch`的值。
+`arrayKeys`获取的是`arrayMethods`可被枚举的属性值，即`methodsToPatch`的值。
+
+## defineReactive
+
+``` js
+export function defineReactive (
+  obj: Object,
+  key: string,
+  val: any,
+  customSetter?: ?Function,
+  shallow?: boolean
+) {
+  const dep = new Dep()
+
+  const property = Object.getOwnPropertyDescriptor(obj, key)
+  if (property && property.configurable === false) {
+    return
+  }
+
+  // cater for pre-defined getter/setters
+  const getter = property && property.get
+  const setter = property && property.set
+  if ((!getter || setter) && arguments.length === 2) {
+    val = obj[key]
+  }
+
+  let childOb = !shallow && observe(val)
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter () {
+      const value = getter ? getter.call(obj) : val
+      if (Dep.target) {
+        dep.depend()
+        if (childOb) {
+          childOb.dep.depend()
+          if (Array.isArray(value)) {
+            dependArray(value)
+          }
+        }
+      }
+      return value
+    },
+    set: function reactiveSetter (newVal) {
+      const value = getter ? getter.call(obj) : val
+      /* eslint-disable no-self-compare */
+      if (newVal === value || (newVal !== newVal && value !== value)) {
+        return
+      }
+      /* eslint-enable no-self-compare */
+      if (process.env.NODE_ENV !== 'production' && customSetter) {
+        customSetter()
+      }
+      // #7981: for accessor properties without setter
+      if (getter && !setter) return
+      if (setter) {
+        setter.call(obj, newVal)
+      } else {
+        val = newVal
+      }
+      childOb = !shallow && observe(newVal)
+      dep.notify()
+    }
+  })
+}
+```
