@@ -308,16 +308,20 @@ methodsToPatch.forEach(function (method) {
 
 这里迭代`methodsToPatch`，将需要更改的数组方法在不污染原生方法的情况下显示挂载在`arrayMethods`上，达到视图更新的目的。同时收集可能新增的数组元素`observe`化。
 
+`arrayKeys`获取的是`arrayMethods`可被枚举的属性值，即`methodsToPatch`的值。
+
 ``` js
 // core/observer/index
 const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
 ```
 
-`arrayKeys`获取的是`arrayMethods`可被枚举的属性值，即`methodsToPatch`的值。
+由此vue通过更改数组的方法`push, pop, shift, unshift, splice, sort, reverse`来达到数组对这几个方法的更新响应的目的。
 
 ## defineReactive
 
 ``` js
+// core/observer/index
+
 export function defineReactive (
   obj: Object,
   key: string,
@@ -333,6 +337,7 @@ export function defineReactive (
   }
 
   // cater for pre-defined getter/setters
+  // 取出自定义的getter/setter
   const getter = property && property.get
   const setter = property && property.set
   if ((!getter || setter) && arguments.length === 2) {
@@ -359,7 +364,8 @@ export function defineReactive (
     set: function reactiveSetter (newVal) {
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
-      if (newVal === value || (newVal !== newVal && value !== value)) {
+      if (newVal === value || (newVal !== newVal && value !== value)) {+
+
         return
       }
       /* eslint-enable no-self-compare */
