@@ -33,7 +33,7 @@ Vue.prototype._init = function (options?: Object) {
 ...
 ```
 
-姑且省略部分代码，主要看`init`这个片段的代码。从此处我们可以额外知道为什么`beforeCreate`时拿不到`data`和`props`的数据，因为他们还没被初始化。同样也知道为什么`created`拿不到组件的DOM对象，因为在此之前组件还没被挂载渲染。OK，进入正题，`initState`:
+姑且省略部分代码，主要看`init`这个片段的代码。从此处我们可以额外知道为什么`beforeCreate`时拿不到`data`和`props`的数据，因为他们还没被初始化。同样也知道为什么`created`拿不到组件的DOM对象，因为在此之前组件还没被挂载渲染。
 
 ``` js
 // core/instance/state.js
@@ -54,7 +54,7 @@ export function initState (vm: Component) {
 }
 ```
 
-该方法依次初始化数据`props`->`methods`->`data`->`computed`->`watch`。我们先以`initData`为例看看`data`是如何被监听变化以更新视图的。
+该方法依次初始化数据`props`->`methods`->`data`->`computed`->`watch`。我们以`initData`为例看看`data`是如何被监听变化以更新视图的。
 
 ## initData
 
