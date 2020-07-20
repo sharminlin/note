@@ -172,7 +172,7 @@ export class Observer {
     this.dep = new Dep()
     // 初始化计数
     this.vmCount = 0
-    // 挂载ob
+    // 挂载ob，此处def添加属性具备不可枚举性
     def(value, '__ob__', this)
     // 数组方法的劫持
     if (Array.isArray(value)) {
@@ -337,21 +337,26 @@ export function defineReactive (
   }
 
   // cater for pre-defined getter/setters
-  // 取出自定义的getter/setter
+  // 取出预定义的getter/setter，劫持时中会使用
   const getter = property && property.get
   const setter = property && property.set
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
 
+  // 递归observe子对象，返回子对象的__ob__: Observer实例
   let childOb = !shallow && observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
+      // 取值
       const value = getter ? getter.call(obj) : val
+      // 此时有watcher正在触发get，收集依赖
       if (Dep.target) {
+        // watcher中存储该dep，之后dep中add sub存储 watcher
         dep.depend()
+        // 如果有子对象，同上操作。即一个watcher中存有多个dep
         if (childOb) {
           childOb.dep.depend()
           if (Array.isArray(value)) {
@@ -364,8 +369,8 @@ export function defineReactive (
     set: function reactiveSetter (newVal) {
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
-      if (newVal === value || (newVal !== newVal && value !== value)) {+
-
+      // 相同值不予以触发
+      if (newVal === value || (newVal !== newVal && value !== value)) {
         return
       }
       /* eslint-enable no-self-compare */
@@ -379,9 +384,299 @@ export function defineReactive (
       } else {
         val = newVal
       }
+      // 更新子对象的Observer实例
       childOb = !shallow && observe(newVal)
+      // 通知订阅者发布更新
       dep.notify()
     }
   })
 }
 ```
+
+`Object.defineProperty`定义数据的`getter/setter`，在`watcher`条件下触发`getter`，将收集依赖`watcher`。触发`setter`时，订阅者通知响应更新。
+
+## Dep
+
+`Dep`是一个订阅者，它的实例由于闭包的特性，被每个`defineReactive`过的数据保存。即每一个响应式数据都有一个对应的`Dep`实例。如果该数据被某一个（当然不仅仅只有一个）`watcher`监听，则该数据的实例`dep`被该`watcher`保存，并且`dep`也会反向保存`watcher`，用以通知`watcher`触发响应更新回调。
+
+``` js
+// core/observer/dep
+
+export default class Dep {
+  static target: ?Watcher;
+  id: number;
+  subs: Array<Watcher>;
+
+  constructor () {
+    this.id = uid++
+    this.subs = []
+  }
+
+  // 新增
+  addSub (sub: Watcher) {
+    this.subs.push(sub)
+  }
+
+  // 移除
+  removeSub (sub: Watcher) {
+    remove(this.subs, sub)
+  }
+
+  // 依赖收集，watcher和dep进行双向存储
+  depend () {
+    if (Dep.target) {
+      Dep.target.addDep(this)
+    }
+  }
+
+  // 通知更新
+  notify () {
+    // stabilize the subscriber list first
+    const subs = this.subs.slice()
+    if (process.env.NODE_ENV !== 'production' && !config.async) {
+      // subs aren't sorted in scheduler if not running async
+      // we need to sort them now to make sure they fire in correct
+      // order
+      subs.sort((a, b) => a.id - b.id)
+    }
+    for (let i = 0, l = subs.length; i < l; i++) {
+      subs[i].update()
+    }
+  }
+}
+
+// The current target watcher being evaluated.
+// This is globally unique because only one watcher
+// can be evaluated at a time.
+// 全局唯一的watcher实例，上文数据getter中收集依赖时使用
+Dep.target = null
+const targetStack = []
+
+export function pushTarget (target: ?Watcher) {
+  targetStack.push(target)
+  Dep.target = target
+}
+
+export function popTarget () {
+  targetStack.pop()
+  Dep.target = targetStack[targetStack.length - 1]
+}
+```
+
+## Watcher
+
+监听者`Watcher`，用以数据发生改变后响应的回调
+
+``` js
+// core/observer/watcher
+export default class Watcher {
+  // ...
+  constructor (
+    vm: Component,
+    expOrFn: string | Function,
+    cb: Function,
+    options?: ?Object,
+    isRenderWatcher?: boolean
+  ) {
+    this.vm = vm
+    if (isRenderWatcher) {
+      vm._watcher = this
+    }
+    vm._watchers.push(this)
+    // options
+    if (options) {
+      this.deep = !!options.deep
+      this.user = !!options.user
+      this.lazy = !!options.lazy
+      this.sync = !!options.sync
+      this.before = options.before
+    } else {
+      this.deep = this.user = this.lazy = this.sync = false
+    }
+    this.cb = cb
+    this.id = ++uid // uid for batching
+    this.active = true
+    this.dirty = this.lazy // for lazy watchers
+    this.deps = []
+    this.newDeps = []
+    this.depIds = new Set()
+    this.newDepIds = new Set()
+    this.expression = process.env.NODE_ENV !== 'production'
+      ? expOrFn.toString()
+      : ''
+    // parse expression for getter
+    if (typeof expOrFn === 'function') {
+      this.getter = expOrFn
+    } else {
+      this.getter = parsePath(expOrFn)
+      if (!this.getter) {
+        this.getter = noop
+        process.env.NODE_ENV !== 'production' && warn(
+          `Failed watching path: "${expOrFn}" ` +
+          'Watcher only accepts simple dot-delimited paths. ' +
+          'For full control, use a function instead.',
+          vm
+        )
+      }
+    }
+    this.value = this.lazy
+      ? undefined
+      : this.get()
+  }
+
+  /**
+   * Evaluate the getter, and re-collect dependencies.
+   */
+  get () {
+    pushTarget(this)
+    let value
+    const vm = this.vm
+    try {
+      // 触发getter，收集依赖
+      value = this.getter.call(vm, vm)
+    } catch (e) {
+      if (this.user) {
+        handleError(e, vm, `getter for watcher "${this.expression}"`)
+      } else {
+        throw e
+      }
+    } finally {
+      // "touch" every property so they are all tracked as
+      // dependencies for deep watching
+      if (this.deep) {
+        traverse(value)
+      }
+      popTarget()
+      this.cleanupDeps()
+    }
+    return value
+  }
+
+  /**
+   * Add a dependency to this directive.
+   */
+  addDep (dep: Dep) {
+    const id = dep.id
+    if (!this.newDepIds.has(id)) {
+      this.newDepIds.add(id)
+      this.newDeps.push(dep)
+      if (!this.depIds.has(id)) {
+        dep.addSub(this)
+      }
+    }
+  }
+
+  /**
+   * Clean up for dependency collection.
+   */
+  cleanupDeps () {
+    let i = this.deps.length
+    while (i--) {
+      const dep = this.deps[i]
+      if (!this.newDepIds.has(dep.id)) {
+        dep.removeSub(this)
+      }
+    }
+    let tmp = this.depIds
+    this.depIds = this.newDepIds
+    this.newDepIds = tmp
+    this.newDepIds.clear()
+    tmp = this.deps
+    this.deps = this.newDeps
+    this.newDeps = tmp
+    this.newDeps.length = 0
+  }
+
+  /**
+   * Subscriber interface.
+   * Will be called when a dependency changes.
+   */
+  update () {
+    /* istanbul ignore else */
+    if (this.lazy) {
+      this.dirty = true
+    } else if (this.sync) {
+      this.run()
+    } else {
+      queueWatcher(this)
+    }
+  }
+
+  /**
+   * Scheduler job interface.
+   * Will be called by the scheduler.
+   */
+  run () {
+    if (this.active) {
+      const value = this.get()
+      if (
+        value !== this.value ||
+        // Deep watchers and watchers on Object/Arrays should fire even
+        // when the value is the same, because the value may
+        // have mutated.
+        isObject(value) ||
+        this.deep
+      ) {
+        // set new value
+        const oldValue = this.value
+        this.value = value
+        if (this.user) {
+          try {
+            this.cb.call(this.vm, value, oldValue)
+          } catch (e) {
+            handleError(e, this.vm, `callback for watcher "${this.expression}"`)
+          }
+        } else {
+          this.cb.call(this.vm, value, oldValue)
+        }
+      }
+    }
+  }
+
+  /**
+   * Evaluate the value of the watcher.
+   * This only gets called for lazy watchers.
+   */
+  evaluate () {
+    this.value = this.get()
+    this.dirty = false
+  }
+
+  /**
+   * Depend on all deps collected by this watcher.
+   */
+  depend () {
+    let i = this.deps.length
+    while (i--) {
+      this.deps[i].depend()
+    }
+  }
+
+  /**
+   * Remove self from all dependencies' subscriber list.
+   */
+  teardown () {
+    if (this.active) {
+      // remove self from vm's watcher list
+      // this is a somewhat expensive operation so we skip it
+      // if the vm is being destroyed.
+      if (!this.vm._isBeingDestroyed) {
+        remove(this.vm._watchers, this)
+      }
+      let i = this.deps.length
+      while (i--) {
+        this.deps[i].removeSub(this)
+      }
+      this.active = false
+    }
+  }
+}
+```
+
+如果此时是`watcher`触发，则该`watcher`中将存储一份该数据中的订阅者`dep`。一个数据对应一个闭包`dep`。
+`dep`也将存储该`watcher`，当然是可以进行多个存储。待`setter`执行，则通过`dep`通知`watcher`进行数据响应执行回调（该回调的可能性包括1. 视图更新，2. 自定义watch）。
+
+一个 变量 对应一个dep， dep可订阅多个watcher。变量setter，通过dep去通知这些watcher触发回调
+
+一个watcher中有多个dep，或者说一个watcher可以监视多个变量做同样的动作。待watcher卸载，会把dep中存储的也相应删除
+watcher生成时，会触发对于数据的getter以达到和dep互相收集彼此的结果。
