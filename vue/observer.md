@@ -450,7 +450,7 @@ export default class Dep {
 // The current target watcher being evaluated.
 // This is globally unique because only one watcher
 // can be evaluated at a time.
-// 全局唯一的watcher实例，上文数据getter中收集依赖时使用
+// 全局唯一的watcher实例，watcher收集依赖时会使用
 Dep.target = null
 const targetStack = []
 
@@ -734,6 +734,8 @@ export function queueWatcher (watcher: Watcher) {
   }
 }
 ```
+
+队列执行中，除了`watcher`会`run`一下，相关组件还会触发`updated hook`和激活组件`activated hook`
 
 ``` js
 /**
