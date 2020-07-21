@@ -1,5 +1,7 @@
 # vue 响应式原理
 
+交个作业。
+
 ## 组件入口
 
 每一个组件实例生成之际，都会对`data`和`props`进行初始化数据监听。我们找到`Vue.prototype._init`这个方法，该方法为组件实例的统一入口：
@@ -58,7 +60,7 @@ export function initState (vm: Component) {
 
 ## initData
 
-该方法将获取到`data`的数据挂载在`vm._data`上，之后通过迭代校验之后，将符合规范的`data`的属性代理在`vm`实例上，因为在组件内才可以使用`this.`直接访问`data`属性。当然最重要的还是最后的`observe`化`data`：
+该方法将获取到`data`的数据挂载在`vm._data`上，之后通过迭代校验之后，将符合规范的`data`的属性代理在`vm`实例上，因此在组件内才可以使用`this.`直接访问`data`属性。当然最重要的还是最后的`observe`化`data`：
 
 ``` js
 // core/instance/state.js
@@ -213,9 +215,10 @@ export class Observer {
   }
 }
 ```
+
 提取两点作为该方法的重要动作：
 1. `Observer`中重定义了数组方法
-2. 劫持对象类型`value`的`getter`和`setter`以收集依赖和触发更新
+2. `defineReactive`劫持对象类型`value`的`getter`和`setter`以收集依赖和触发更新。
 
 ### Array
 
@@ -317,7 +320,7 @@ const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
 
 由此vue通过更改数组的方法`push, pop, shift, unshift, splice, sort, reverse`来达到数组对这几个方法的更新响应的目的。
 
-## defineReactive
+### defineReactive
 
 ``` js
 // core/observer/index
@@ -401,7 +404,6 @@ export function defineReactive (
 
 ``` js
 // core/observer/dep
-
 export default class Dep {
   static target: ?Watcher;
   id: number;
@@ -422,7 +424,7 @@ export default class Dep {
     remove(this.subs, sub)
   }
 
-  // 依赖收集，watcher和dep进行双向存储
+  // 依赖收集入口，watcher和dep进行双向存储
   depend () {
     if (Dep.target) {
       Dep.target.addDep(this)
@@ -465,7 +467,7 @@ export function popTarget () {
 
 ## Watcher
 
-监听者`Watcher`，用以数据发生改变后响应的回调
+观察者`Watcher`，每一个实例`watcher`被依赖收集后，将存储于相关响应式数据的`dep`中，在数据触发`setter`时，会被`dep`通知派发更新执行回调。
 
 ``` js
 // core/observer/watcher
@@ -479,6 +481,7 @@ export default class Watcher {
     isRenderWatcher?: boolean
   ) {
     this.vm = vm
+    // 渲染wahtcher
     if (isRenderWatcher) {
       vm._watcher = this
     }
@@ -505,6 +508,7 @@ export default class Watcher {
       ? expOrFn.toString()
       : ''
     // parse expression for getter
+    // 解析获取监听对象的getter
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
@@ -526,13 +530,15 @@ export default class Watcher {
 
   /**
    * Evaluate the getter, and re-collect dependencies.
+   * 获取value值，并收集依赖
    */
   get () {
+    // 设置全局唯一值Dep.target = this
     pushTarget(this)
     let value
     const vm = this.vm
     try {
-      // 触发getter，收集依赖
+      // 触发getter，获取值同时收集依赖
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -543,9 +549,12 @@ export default class Watcher {
     } finally {
       // "touch" every property so they are all tracked as
       // dependencies for deep watching
+      // 如果是深度监听，则递归追踪该对象的所有已被observe的属性，触发它们的getter，收集对应依赖
+      // 即此时的watcher存储于每一个监听对象的dep中，而该watcher也存储了每一个对象的dep
       if (this.deep) {
         traverse(value)
       }
+      // 依赖关联完毕，清掉Dep.target
       popTarget()
       this.cleanupDeps()
     }
@@ -555,12 +564,15 @@ export default class Watcher {
   /**
    * Add a dependency to this directive.
    */
+  // 依赖收集，会在数据getter中，dep.depend()中调用执行
   addDep (dep: Dep) {
     const id = dep.id
+    // 存储新收集到的depId，和dep
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
+        // 反向关联，dep中订阅该watcher
         dep.addSub(this)
       }
     }
@@ -568,15 +580,18 @@ export default class Watcher {
 
   /**
    * Clean up for dependency collection.
+   * 一次依赖收集完毕后执行，清除旧的依赖项
    */
   cleanupDeps () {
     let i = this.deps.length
     while (i--) {
       const dep = this.deps[i]
+      // 不存在的旧的依赖进行取消订阅
       if (!this.newDepIds.has(dep.id)) {
         dep.removeSub(this)
       }
     }
+    // 新的覆盖旧的
     let tmp = this.depIds
     this.depIds = this.newDepIds
     this.newDepIds = tmp
@@ -590,14 +605,17 @@ export default class Watcher {
   /**
    * Subscriber interface.
    * Will be called when a dependency changes.
+   * 数据setter触发对应dep中的订阅项subs进行派发更新
    */
   update () {
     /* istanbul ignore else */
     if (this.lazy) {
       this.dirty = true
     } else if (this.sync) {
+      // 同步触发
       this.run()
     } else {
+      // 推送至观察者队列，统一触发
       queueWatcher(this)
     }
   }
@@ -614,10 +632,12 @@ export default class Watcher {
         // Deep watchers and watchers on Object/Arrays should fire even
         // when the value is the same, because the value may
         // have mutated.
+        // 前后值可能相同，但对于对象/数组属性或者deep监听而言，可能属性值发生了改变
         isObject(value) ||
         this.deep
       ) {
         // set new value
+        // 触发监听回调（回调有两种，1. 渲染回调 2. 用户自定义回调）
         const oldValue = this.value
         this.value = value
         if (this.user) {
@@ -636,6 +656,7 @@ export default class Watcher {
   /**
    * Evaluate the value of the watcher.
    * This only gets called for lazy watchers.
+   * 计算监听对象值，此时重新收集了一次回调
    */
   evaluate () {
     this.value = this.get()
@@ -644,6 +665,7 @@ export default class Watcher {
 
   /**
    * Depend on all deps collected by this watcher.
+   * 关联该watcher的所有依赖
    */
   depend () {
     let i = this.deps.length
@@ -654,6 +676,7 @@ export default class Watcher {
 
   /**
    * Remove self from all dependencies' subscriber list.
+   * 从所有依赖的订阅列表中移除自己
    */
   teardown () {
     if (this.active) {
@@ -673,10 +696,115 @@ export default class Watcher {
 }
 ```
 
-如果此时是`watcher`触发，则该`watcher`中将存储一份该数据中的订阅者`dep`。一个数据对应一个闭包`dep`。
-`dep`也将存储该`watcher`，当然是可以进行多个存储。待`setter`执行，则通过`dep`通知`watcher`进行数据响应执行回调（该回调的可能性包括1. 视图更新，2. 自定义watch）。
+## scheduler
 
-一个 变量 对应一个dep， dep可订阅多个watcher。变量setter，通过dep去通知这些watcher触发回调
+调度队列执行操作。`queueWatcher`方法用于维护待执行的`watcher`队列的入队和执行入口。
 
-一个watcher中有多个dep，或者说一个watcher可以监视多个变量做同样的动作。待watcher卸载，会把dep中存储的也相应删除
-watcher生成时，会触发对于数据的getter以达到和dep互相收集彼此的结果。
+``` js
+//  core/observer/scheduler
+export function queueWatcher (watcher: Watcher) {
+  const id = watcher.id
+  // 判重标志
+  if (has[id] == null) {
+    has[id] = true
+    // 如果未在执行队列，则入队
+    if (!flushing) {
+      queue.push(watcher)
+    } else {
+      // if already flushing, splice the watcher based on its id
+      // if already past its id, it will be run next immediately.
+      // 如果正在执行flushSchedulerQueue，则插入队列中，队列按watcher id升序
+      let i = queue.length - 1
+      while (i > index && queue[i].id > watcher.id) {
+        i--
+      }
+      queue.splice(i + 1, 0, watcher)
+    }
+    // queue the flush
+    // 执行中标志
+    if (!waiting) {
+      waiting = true
+      if (process.env.NODE_ENV !== 'production' && !config.async) {
+        flushSchedulerQueue()
+        return
+      }
+      // 执行队列，放入nextTick，确保数据完全更新后执行视图渲染
+      nextTick(flushSchedulerQueue)
+    }
+  }
+}
+```
+
+``` js
+/**
+ * Flush both queues and run the watchers.
+ */
+function flushSchedulerQueue () {
+  currentFlushTimestamp = getNow()
+  flushing = true
+  let watcher, id
+
+  // 排个序。
+  // 1. 因为组件更新是从父到子的过程。
+  // 2. 用户定义的watch优先于组件渲染。
+  // 3. 如果组件在其父组件正在执行watcher时被销毁了，则可以跳过这个组件存储的watchers
+  queue.sort((a, b) => a.id - b.id)
+
+  // 不缓存长度，因为在执行过程中，长度可能发生变化
+  for (index = 0; index < queue.length; index++) {
+    watcher = queue[index]
+    // 执行beforeUpdate
+    if (watcher.before) {
+      watcher.before()
+    }
+    id = watcher.id
+    has[id] = null
+    // 调度执行回调
+    watcher.run()
+    // 提醒避免陷入死循环，比如在watch中更改自身值
+    if (process.env.NODE_ENV !== 'production' && has[id] != null) {
+      circular[id] = (circular[id] || 0) + 1
+      if (circular[id] > MAX_UPDATE_COUNT) {
+        warn(
+          'You may have an infinite update loop ' + (
+            watcher.user
+              ? `in watcher with expression "${watcher.expression}"`
+              : `in a component render function.`
+          ),
+          watcher.vm
+        )
+        break
+      }
+    }
+  }
+
+  // 保存通过keep-alive的激活的组件副本，用于之后的hook调用
+  const activatedQueue = activatedChildren.slice()
+  // 队列副本，用于之后取出watcher对应组件实例，调用其update hook
+  const updatedQueue = queue.slice()
+
+  // 重置调度状态
+  // 包括队列长度，执行标志等
+  resetSchedulerState()
+
+  // 执行组件activated 和 updated hook
+  callActivatedHooks(activatedQueue)
+  callUpdatedHooks(updatedQueue)
+
+  // devtool hook
+  /* istanbul ignore if */
+  if (devtools && config.devtools) {
+    devtools.emit('flush')
+  }
+}
+```
+
+## 总结要点
+
+1. 组件生成时，会对数据进行递归`observe`，这过程会生成一个`Observer`实例挂载在响应式数据上
+2. 一个响应式数据对应唯一一个`Dep`（订阅者）实例，在`defineReactive`时通过闭包产生
+3. 如果一个响应式变量的`getter`是由观察者`watcher`触发，则该`watcher`将存储该数据的`dep`，`dep`中也将订阅该`watcher`
+4. 一个响应式变量对应一个`dep`，`dep`可订阅多个`watcher`。数据触发`setter`，通过`dep`去通知这些`watcher`触发回调。回调分为视图渲染和开发者自定义watch
+5. 一个watcher中有多个dep，或者说一个watcher可以监视多个变量做同样的动作（比如视图渲染）。待watcher卸载，会把dep中存储的也相应删除
+
+以上。
