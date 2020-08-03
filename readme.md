@@ -2,6 +2,35 @@
 
 记载一些学习笔记，以及项目中遇到的问题与解决方法
 
+## vue
+
+- [vuex 源码阅读手记](https://github.com/sharminlin/note/blob/master/vue/vuex.md)
+- [vue-router 源码解析](https://github.com/sharminlin/note/blob/master/vue/vue-router.md)
+- [Vue Function-based API RFC](https://github.com/sharminlin/note/blob/master/vue/function-based.md)
+- [探索 vue mixin](https://github.com/sharminlin/note/blob/master/vue/mixin.md)
+- [探索 vue directive](https://github.com/sharminlin/note/blob/master/vue/directive.md)
+- [vue 响应式原理](https://github.com/sharminlin/note/blob/master/vue/observer.md)
+- [vue3 响应式实现](https://github.com/sharminlin/note/blob/master/vue/reactivity.md)
+
+## 小程序
+
+- [小程序踩坑](https://github.com/sharminlin/note/blob/master/wx-miniprogram/question.md)
+- [canvas api 常用封装](https://github.com/sharminlin/note/blob/master/wx-miniprogram/canvas.md)
+- [小程序瀑布流实现方案](https://github.com/sharminlin/note/tree/master/water-fall.md)
+- [小程序重写Page函数](https://github.com/sharminlin/note/tree/master/wx-miniprogram/page)
+
+## react
+
+- [redux 一些理解](https://github.com/sharminlin/note/blob/master/react/redux.md)
+- [hooks 的一些理解](https://github.com/sharminlin/note/blob/master/react/hook.md)
+- [context 的一些理解](https://github.com/sharminlin/note/blob/master/react/context.md)
+
+## 其他
+
+- [手写Promise](https://github.com/sharminlin/note/blob/master/interview/Promise.html)
+- [一些总结](https://github.com/sharminlin/note/blob/master/interview/interview.md)
+- [ts 学习记录](https://github.com/sharminlin/note/blob/master/ts/ts.md)
+
 # Docs
 
 收集一些重要的文档资料或者优秀有用的文章，便于翻查
