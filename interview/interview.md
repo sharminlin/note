@@ -168,6 +168,7 @@ Function.prototype.myCall = function ( context, ...args ) {
   context = context || window
   args = args || []
   const key = Symbol()
+  // 对象上下文调用改变this
   context[key] = this
   const result = context[key](...args)
   delete context[key]
