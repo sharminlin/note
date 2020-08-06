@@ -31,6 +31,7 @@
 - [一些总结](https://github.com/sharminlin/note/blob/master/interview/interview.md)
 - [ts 学习记录](https://github.com/sharminlin/note/blob/master/ts/ts.md)
 - [浏览器 学习记录](https://github.com/sharminlin/note/blob/master/interview/browser.md)
+- [async/await 原理挖掘](https://github.com/sharminlin/note/blob/master/interview/async.md)
 
 # Docs
 
