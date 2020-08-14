@@ -1,7 +1,5 @@
 # Notes for Learning
 
-记载一些学习笔记，以及项目中遇到的问题与解决方法
-
 ## vue
 
 - [vuex 源码阅读手记](https://github.com/sharminlin/note/blob/master/vue/vuex.md)
