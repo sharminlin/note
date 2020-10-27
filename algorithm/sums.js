@@ -83,3 +83,47 @@
     return result
   };
 }
+
+/**
+ * 最接近的三数之和 （中等）
+ * https://leetcode-cn.com/problems/3sum-closest/
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number}
+ */
+{
+  let threeSumClosest = function (nums, target) {
+    // 特判，小于3
+    if (nums.length < 3) return undefined
+    // 排序升序
+    nums.sort((a, b) => a - b)
+
+    let min = Infinity
+
+    // i循环
+    for (let i = 0; i < nums.length - 1; i++) {
+      // 去重复值
+      if (i > 0 && nums[i] === nums[i - 1]) {
+        continue
+      }
+      // i之后，形成一个双指针
+      let L = i + 1, R = nums.length - 1
+
+      while (L < R) {
+        let value = nums[i] + nums[L] + nums[R]
+        let diff = Math.abs(target - value)
+        // i L R相加的三种情况
+        if (diff === 0) {
+          return value
+        } else if (value > target) {
+          Math.abs(min - target) > diff && (min = value)
+          R--
+        } else if (value < target) {
+          Math.abs(min - target) > diff && (min = value)
+          L++
+        }
+      }
+    }
+    return min
+  };
+}
