@@ -127,3 +127,22 @@
     return min
   };
 }
+
+/**
+ * 独一无二的出现次数 （简单）
+ * https://leetcode-cn.com/problems/unique-number-of-occurrences/
+ * @param {number[]} arr
+ * @return {boolean}
+ */
+{
+  let uniqueOccurrences = function (arr) {
+    const hash = {}
+    for (let i = 0; i < arr.length; i++) {
+      !hash[arr[i]] ? (hash[arr[i]] = 1) : ++hash[arr[i]]
+    }
+
+    let values = Object.values(hash)
+    let sets = new Set(values)
+    return values.length === sets.size
+  };
+}
