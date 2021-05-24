@@ -58,6 +58,11 @@ min-height: 0
 当图片设置为行内模块时，与行内文字未对齐。<br />
 使用`vertical-align: top`，使其与文字顶线对齐即可
 
+### video
+
+#### swiper中使用video，浮动在其上的元素在ios中当滑动时会消失。
+给浮动元素加一个will-change: transform;的样式
+
 ## 样式
 
 #### 背景图设置
