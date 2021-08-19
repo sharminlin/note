@@ -102,6 +102,22 @@ export default {
 }
 ```
 
+## axios
+
+如果使用了nuxt自身的模块`@nuxtjs/axios`，为了确保安全可靠，一定要配置`baseUrl`。
+
+> baseURL Default: http://[HOST]:[PORT][PREFIX]
+
+否则自定义实现`server`时，baseURL将识别成node端启动服务的域名，比如`localhost:8080`
+
+``` js
+{
+  axios: {
+    baseURL: '/', // Used as fallback if no runtime config is provided
+  },
+}
+```
+
 ## 打包
 
 ### css
