@@ -2,6 +2,7 @@
 
 ## vue
 
+- [Nuxt踩坑](https://github.com/sharminlin/note/blob/master/vue/nuxt.md)
 - [vuex 源码阅读手记](https://github.com/sharminlin/note/blob/master/vue/vuex.md)
 - [vue-router 源码解析](https://github.com/sharminlin/note/blob/master/vue/vue-router.md)
 - [Vue Function-based API RFC](https://github.com/sharminlin/note/blob/master/vue/function-based.md)
