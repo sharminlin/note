@@ -94,3 +94,36 @@ export default {
   }
 }
 ```
+
+### babel
+
+babel配置建议不使用`.babellrc`等配置文件，而是直接在`nuxt.config.js`的`build`选项中配置，因为nuxt本身存在默认配置：
+
+``` js
+{
+  babelrc: false,
+  cacheDirectory: undefined,
+  presets: ['@nuxt/babel-preset-app']
+}
+```
+
+该默认配置支持ie9。使用单独的`babel`文件，需要打开`babelrc`开关，并导致默认配置失效。具体配置详见[nuxt/babel](https://zh.nuxtjs.org/docs/2.x/configuration-glossary/configuration-build#babel)
+
+### 按需加载vant-ui
+
+1. 引入`yarn add -D babel-plugin-import`
+2. 在`nuxt.config.js`中配置
+
+  ``` js
+    {
+      transpile: [/vant.*?less/],
+      babel: {
+        plugins: [
+          ['import', {
+            libraryName: 'vant',
+            style: path => `${path}/style/less.js` // 使用less
+          }, 'vant']
+        ]
+      },
+    }
+  ```
