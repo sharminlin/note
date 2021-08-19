@@ -80,6 +80,28 @@ export default {
 }
 ```
 
+## 代理
+
+多个不同url前缀的代理写法
+
+``` js
+// nuxt.config.js
+{
+  proxy: [
+    ['/api', host],
+    [
+      ['/a-api1', '/a-api2'],
+      {
+        target: host,
+        onProxyReq: function(proxyReq, req, res) {
+          proxyReq.setHeader('Origin', host);
+        },
+      },
+    ],
+  ],
+}
+```
+
 ## 打包
 
 ### css
