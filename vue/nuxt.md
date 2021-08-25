@@ -118,6 +118,14 @@ export default {
 }
 ```
 
+## 中间件
+
+中间件，目录文件夹`/middleware`，类似于路由守卫，因此每次url变化都会执行。所以如果只是需要服务端渲染的前置请求，包裹在`process.server`判断语句中，避免vue-router的跳转出现明显的延迟现象。
+
+## layout
+
+1. layout由于是服务端渲染，在使用了路由守卫并且路由守卫存在异步逻辑的场景下，layout的`created`与`mounted`生命周期无法获取到正确的`$route`值
+
 ## 打包
 
 ### css
