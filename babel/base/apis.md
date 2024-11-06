@@ -2,6 +2,8 @@
 
 官方文档：https://babeljs.io/docs/babel-parser
 
+官方插件手册：https://github.com/jamiebuilds/babel-handbook/blob/master/translations/zh-Hans/plugin-handbook.md#toc-transform
+
 ## 1. @babel/parser
 
 `@babel/parser` 是一个用来解析代码的包，它把代码解析成 AST。
